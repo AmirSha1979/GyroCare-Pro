@@ -1247,22 +1247,28 @@ body.light-mode .profile-card{background:#0a1525 !important;}
   <!-- ═══ SETTINGS TAB ═══ -->
   <div id="tab-settings" class="tab-content">
 
-    <!-- iOS Install Card — only shown when not already installed -->
-    <div id="iosInstallCard" class="panel" style="margin:10px 0;padding:16px;display:none;border:1px solid rgba(232,168,56,.35);background:linear-gradient(135deg,rgba(232,168,56,.08),rgba(232,168,56,.03));">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:9px;">
-          <span style="font-size:22px;">📲</span>
-          <div>
-            <div style="font-size:14px;font-weight:800;color:var(--gold);letter-spacing:.04em;">Install on iPhone</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;">Add to Home Screen for the full app experience</div>
-          </div>
+    <!-- Install App Card — always visible, instructions adapt to iOS / Android / desktop -->
+    <div id="installAppCard" class="panel" style="margin:10px 0;padding:16px;border:1px solid rgba(232,168,56,.35);background:linear-gradient(135deg,rgba(232,168,56,.08),rgba(232,168,56,.03));">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;">
+        <span style="font-size:24px;">📲</span>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--gold);letter-spacing:.04em;">Install GyroCare Pro</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px;" id="installSubtitle">Add to Home Screen for the full app experience</div>
         </div>
-        <button onclick="document.getElementById('iosInstallCard').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;line-height:1;">×</button>
       </div>
-      <div style="background:rgba(0,0,0,.2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+
+      <!-- Already installed notice -->
+      <div id="installDone" style="display:none;background:rgba(51,211,154,.08);border:1px solid rgba(51,211,154,.25);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">✅</div>
+        <div style="font-size:13px;font-weight:700;color:#33d39a;">Already installed!</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">GyroCare Pro is running as an app.</div>
+      </div>
+
+      <!-- iOS Safari instructions -->
+      <div id="installIos" style="display:none;background:rgba(0,0,0,.2);border-radius:12px;padding:12px;display:none;flex-direction:column;gap:10px;">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:28px;height:28px;border-radius:8px;background:var(--gold);color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
-          <div style="font-size:13px;color:var(--text);">Tap the <span style="color:var(--gold);font-weight:700;">Share</span> button <span style="font-size:16px;">⎙</span> at the bottom of Safari</div>
+          <div style="font-size:13px;color:var(--text);">Tap the <span style="color:var(--gold);font-weight:700;">Share ⎙</span> button at the bottom of Safari</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:28px;height:28px;border-radius:8px;background:var(--gold);color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
@@ -1270,10 +1276,35 @@ body.light-mode .profile-card{background:#0a1525 !important;}
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:28px;height:28px;border-radius:8px;background:var(--gold);color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
-          <div style="font-size:13px;color:var(--text);">Tap <span style="color:var(--gold);font-weight:700;">"Add"</span> — GyroCare Pro appears on your home screen!</div>
+          <div style="font-size:13px;color:var(--text);">Tap <span style="color:var(--gold);font-weight:700;">"Add"</span> — done!</div>
         </div>
+        <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:2px;">⚠️ Must use Safari — Chrome on iOS cannot install PWAs</div>
       </div>
-      <div style="margin-top:10px;font-size:10px;color:var(--muted);text-align:center;">⚠️ Must be opened in Safari, not Chrome</div>
+
+      <!-- Android / Chrome instructions + install button -->
+      <div id="installAndroid" style="display:none;flex-direction:column;gap:10px;">
+        <div style="background:rgba(0,0,0,.2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:var(--gold);color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+            <div style="font-size:13px;color:var(--text);">Tap the <span style="color:var(--gold);font-weight:700;">⋮ menu</span> in the top-right of Chrome</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:var(--gold);color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+            <div style="font-size:13px;color:var(--text);">Tap <span style="color:var(--gold);font-weight:700;">"Add to Home screen"</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:var(--gold);color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+            <div style="font-size:13px;color:var(--text);">Tap <span style="color:var(--gold);font-weight:700;">"Install"</span> to confirm</div>
+          </div>
+        </div>
+        <button id="androidInstallBtn" style="display:none;width:100%;padding:13px;border-radius:12px;border:none;background:var(--gold);color:#000;font:800 14px Inter,sans-serif;letter-spacing:.06em;cursor:pointer;text-transform:uppercase;" onclick="triggerAndroidInstall()">⬇ Install App Now</button>
+      </div>
+
+      <!-- Desktop fallback -->
+      <div id="installDesktop" style="display:none;background:rgba(0,0,0,.2);border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:13px;color:var(--muted);">Open this page on your <span style="color:var(--gold);font-weight:700;">iPhone or Android</span> to install the app.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">URL: <span style="color:var(--blue);">amirsha1979.github.io/GyroCare-Pro</span></div>
+      </div>
     </div>
 
     <div class="panel" style="margin:10px 0;overflow:hidden;border-radius:var(--radius);">
@@ -3520,14 +3551,53 @@ if('serviceWorker' in navigator){
   });
 }
 
-// Show iOS install card only in Safari and only when NOT already installed as PWA
+// Install card logic — detects platform and shows appropriate instructions
+let deferredAndroidPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredAndroidPrompt = e;
+  const btn = document.getElementById('androidInstallBtn');
+  if(btn) btn.style.display = 'block';
+});
+
+function triggerAndroidInstall(){
+  if(deferredAndroidPrompt){
+    deferredAndroidPrompt.prompt();
+    deferredAndroidPrompt.userChoice.then(choice => {
+      if(choice.outcome === 'accepted') showInstallDone();
+      deferredAndroidPrompt = null;
+    });
+  }
+}
+
+function showInstallDone(){
+  document.getElementById('installDone').style.display='block';
+  document.getElementById('installIos').style.display='none';
+  document.getElementById('installAndroid').style.display='none';
+  document.getElementById('installDesktop').style.display='none';
+  document.getElementById('installSubtitle').textContent='App status';
+}
+
 (function(){
-  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isInStandaloneMode = ('standalone' in navigator) && navigator.standalone;
-  const isSafari = /safari/i.test(navigator.userAgent) && !/crios|fxios|opios|mercury/i.test(navigator.userAgent);
-  if(isIos && isSafari && !isInStandaloneMode){
-    const card = document.getElementById('iosInstallCard');
-    if(card) card.style.display = 'block';
+  const ua = navigator.userAgent;
+  const isIos = /iphone|ipad|ipod/i.test(ua);
+  const isAndroid = /android/i.test(ua);
+  const isStandalone = ('standalone' in navigator && navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+  const isSafari = /safari/i.test(ua) && !/crios|fxios|opios|mercury/i.test(ua);
+
+  if(isStandalone){
+    showInstallDone();
+  } else if(isIos && isSafari){
+    document.getElementById('installIos').style.display='flex';
+  } else if(isIos && !isSafari){
+    // iOS but not Safari — Chrome/Firefox on iOS can't install
+    document.getElementById('installIos').style.display='flex';
+  } else if(isAndroid){
+    document.getElementById('installAndroid').style.display='flex';
+  } else {
+    // Desktop
+    document.getElementById('installDesktop').style.display='block';
   }
 })();
 </script>
