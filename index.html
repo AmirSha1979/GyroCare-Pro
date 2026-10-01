@@ -3687,317 +3687,68 @@ try{
 // Now build TASKS from the fully-loaded S (including any saved config from localStorage)
 refreshTasks();
 
-// ── SEED: Full import — all original log rows 1-44 ──────────────
+// ── SEED: Sample dataset — first launch only (App Store v1.0) ─────────────
+// Fresh installs get a small, clearly-labeled SAMPLE maintenance history so
+// the History tab (and every dashboard widget fed by it) is never blank.
+// Every entry carries sample:true and is badged in the UI; Setup/banner
+// offers one-tap removal. Never runs when real data already exists.
 (function(){
-  if(localStorage.getItem('_seed_full_v11')) return;
+  if(localStorage.getItem('_seed_sample_v1')) return;
+  localStorage.setItem('_seed_sample_v1','1');
 
-  // Clear everything
-  S.history = [];
-  S.logged = {};
-  S.jnpDate = null;
+  var hasReal = (S.history && S.history.length > 0)
+             || (S.profile && S.profile.reg && String(S.profile.reg).trim() !== '');
+  if(hasReal) return;   // beta → App Store updater: keep everything, seed nothing
 
-  const GI_NOTE = 'Inspected per manufacturer procedures — airworthy';
+  function daysAgo(n){ var d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
 
-  function seed(taskId, dateStr, hrs, notes){
-    const task = getTaskById(taskId);
-    const nm = task ? task.nm : taskId;
-    const iv = task ? task.iv : '';
-    const cat = task ? task.cat : 'other';
-    const dt = dateStr + 'T12:00';
-    const uid = taskId + '_' + dateStr + '_' + hrs + '_' + Math.random().toString(36).slice(2,7);
+  function seedSample(taskId, daysBack, hrs, notes){
+    var task = null;
+    try{ task = getTaskById(taskId); }catch(e){}
+    var dateStr = daysAgo(daysBack);
     S.history.push({
-      id: uid,
-      taskId,
-      taskName: nm,
+      id:'sample_'+taskId+'_'+daysBack+'_'+hrs,
+      taskId: taskId,
+      taskName: task ? task.nm : taskId,
       date: dateStr,
-      dateTime: dt,
+      dateTime: dateStr+'T12:00',
       hours: hrs,
-      interval: iv,
-      category: cat,
-      notes: notes || '',
-      aircraftModel: 'mto-sport-2010'
+      interval: task ? task.iv : '',
+      category: task ? task.cat : 'other',
+      notes: notes,
+      aircraftModel: S.aircraftModel || 'mto-sport-2010',
+      sample: true
     });
+    // Mirror the app's bookkeeping so next-due widgets behave identically.
+    // Bucket follows the current aircraft model, exactly like the app's own
+    // log paths (confirmLogDone / addManualHistoryEntry).
     if(taskId !== 'other'){
-      const existing = S.logged[taskId];
+      var _bucket = (S.aircraftModel === 'other')
+        ? (S.otherLogged || (S.otherLogged = {}))
+        : S.logged;
+      var existing = _bucket[taskId];
       if(!existing || hrs >= existing.hrs){
-        S.logged[taskId] = { hrs, date: dateStr, dateTime: dt, notes: notes || '' };
+        _bucket[taskId] = { hrs:hrs, date:dateStr, dateTime:dateStr+'T12:00', notes:notes };
       }
     }
     if(taskId === 'gi') S.jnpDate = dateStr;
   }
 
-  function seedOther(label, dateStr, hrs, notes){
-    const dt = dateStr + 'T12:00';
-    const uid = 'other_' + dateStr + '_' + hrs + '_' + Math.random().toString(36).slice(2,7);
-    S.history.push({
-      id: uid,
-      taskId: 'other',
-      taskName: label,
-      date: dateStr,
-      dateTime: dt,
-      hours: hrs,
-      interval: 'One-time record',
-      category: 'other',
-      notes: notes || '',
-      aircraftModel: 'mto-sport-2010'
-    });
-  }
+  // 10 generic entries, ~11 months, tach 118 → 488. Deliberately ordinary —
+  // nothing a real log couldn't contain, but every note says "Sample entry".
+  seedSample('eo', 320, 118, 'Sample entry — engine oil & filter change');
+  seedSample('sp', 283, 165, 'Sample entry — spark plugs inspected and re-gapped');
+  seedSample('gi', 241, 205, 'Sample entry — 100-hour inspection, no findings');
+  seedSample('tt', 204, 262, 'Sample entry — teeter hinge lubricated');
+  seedSample('af', 163, 318, 'Sample entry — engine air filter cleaned');
+  seedSample('eo', 122, 372, 'Sample entry — engine oil & filter change');
+  seedSample('mp',  85, 410, 'Sample entry — magnetic plug check, no debris');
+  seedSample('bt',  52, 448, 'Sample entry — battery inspection, terminals cleaned');
+  seedSample('rb',  21, 472, 'Sample entry — main rotor bearing inspection, within limits');
+  seedSample('gi',   5, 488, 'Sample entry — 100-hour inspection, no findings');
 
-  // ── Row 1: 2/22/13 | 0 hrs ───────────────────────────────────
-  seedOther('Date of Manufacture', '2013-02-22', 0, 'Date of Manufacture');
-
-  // ── Row 2: 3/4/13 | 10 hrs ───────────────────────────────────
-  seed('eo', '2013-03-04', 10, 'Oil Change');
-
-  // ── Row 3: 2/10/14 | 35 hrs ──────────────────────────────────
-  seed('eo', '2014-02-10', 35, 'Oil Change');
-  seed('sp', '2014-02-10', 35, 'Spark Plugs');
-
-  // ── Row 4: 2/18/17 | 37 hrs ──────────────────────────────────
-  seed('gi', '2017-02-18', 37, 'Condition Inspection');
-
-  // ── Row 5: 2/24/17 | 41 hrs ──────────────────────────────────
-  seed('i25', '2017-02-24', 41, '40 Hr Test Flight and maneuvers');
-
-  // ── Row 6: 2/27/17 | 43 hrs ──────────────────────────────────
-  seed('eo', '2017-02-27', 43, 'Chg Oil 3.5 Qts Sport Plus 4 & Tempest Filter');
-
-  // ── Row 7: 7/28/17 | 74 hrs ──────────────────────────────────
-  seed('eo', '2017-07-28', 74, 'Chg Oil 3.5 Qts Sport Plus 4 & Tempest Filter');
-
-  // ── Row 8: 4/20/18 | 110 hrs ─────────────────────────────────
-  seed('gi', '2018-04-20', 110, 'Condition Inspection');
-  seed('af', '2018-04-20', 110, 'Cleaned air filter');
-  seed('sp', '2018-04-20', 110, 'Spark plugs cleaned');
-  seed('eo', '2018-04-20', 110, 'Chg Oil 3.5 Qts Sport Plus 4 & Tempest Filter');
-
-  // ── Row 9: 5/15/18 | 110 hrs ─────────────────────────────────
-  seed('rs', '2018-05-15', 110, 'Chg rotor blades, hub bar assembly, rotor balance');
-
-  // ── Row 10: 6/19/18 | 151 hrs ────────────────────────────────
-  seed('eo', '2018-06-19', 151, 'Chg Oil 3.5 Qts Sport Plus 4 & Tempest Filter; Curtis oil quick drain plug added');
-
-  // ── Row 11: 8/8/19 | 192 hrs ─────────────────────────────────
-  seed('gi', '2019-08-08', 192, 'Condition Inspection');
-  seed('af', '2019-08-08', 192, 'Cleaned air filter');
-  seed('sp', '2019-08-08', 192, 'Spark plugs cleaned');
-  seed('eo', '2019-08-08', 192, 'Chg Oil 3.5 Qts Sport Plus 4 & Tempest Filter');
-
-  // ── Row 12: 11/1/19 | 229-230 hrs ────────────────────────────
-  seed('eo', '2019-11-01', 229, 'Chg Oil 3.5 Qts Sport Plus 4 & Tempest Filter');
-  seed('ps', '2019-11-01', 229, 'Replaced pneumatics dryer filter #30358');
-  seedOther('Aircraft Purchase', '2019-11-01', 230, 'Purchase from James Peck');
-
-  // ── Row 13: 11/16/19 | 232 hrs ───────────────────────────────
-  seedOther('Avionics — ASI & Pitot/Static', '2019-11-16', 232, 'Changed Air Speed Indicator; Checked and tested Static and Pitot lines; added Rear ASI to system');
-
-  // ── Row 14: 11/19/19 | 236 hrs ───────────────────────────────
-  seed('gi', '2019-11-19', 236, GI_NOTE);
-
-  // ── Row 15: 11/29/19 | 240-243 hrs ──────────────────────────
-  seed('gi', '2019-11-29', 240, GI_NOTE);
-  seedOther('Electrical — Gauge Lights & Dimmer', '2019-11-29', 243, 'Wired in gauge lights, off/on switch and rheostat/dimmer');
-  seed('ps', '2019-11-29', 243, 'Changed Pre-rotate air valve V6 SY114A-6LOZ');
-  seedOther('Avionics — Gauge Lights & Instruments', '2019-11-29', 242, 'Installed 3 Nulite gauge lights, Altimeter, ASI, Manifold vac; changed all gauge lights to LED');
-
-  // ── Row 16: 12/7/19 | 243-246 hrs ────────────────────────────
-  seed('pb', '2019-12-07', 243, 'Adj prerotate air cyl; Rotor head 1st to ingauge; cyl at belt closed valve to restrict cyl to be last');
-  seed('gi', '2019-12-07', 246, GI_NOTE);
-
-  // ── Row 17: 12/14/19 | 251 hrs ───────────────────────────────
-  seed('gi', '2019-12-14', 251, GI_NOTE);
-
-  // ── Row 18: 12/19/19 | 254 hrs ───────────────────────────────
-  seed('cl', '2019-12-19', 254, 'Changed Radiator overflow bottle PN 30158; changed regulator/rectifier');
-
-  // ── Row 19: 12/21/19 | 256 hrs ───────────────────────────────
-  seed('bt', '2019-12-21', 256, 'Chg Battery Genesis 12V 13AH Lead EP w/M6 G12V13AH10EP June 28 2019; old battery Aug 10 2012');
-
-  // ── Row 20: 12/22/19 | 258 hrs ───────────────────────────────
-  seedOther('Equipment — Prop Spinner', '2019-12-22', 258, 'Installed 3 blade prop spinner — James Peck');
-
-  // ── Row 21: 12/24/19 | 261 hrs ───────────────────────────────
-  seed('ps', '2019-12-24', 261, 'Changed/Installed new brake/trim air cylinder C76E32-80');
-
-  // ── Row 22: 12/25/19 | 261 hrs ───────────────────────────────
-  seed('ps', '2019-12-25', 261, 'Changed 2 air valves V2 & V7, SY114A-6LOZ');
-
-  // ── Row 23: 12/29/19 | 265 hrs ───────────────────────────────
-  seed('gi', '2019-12-29', 265, GI_NOTE);
-
-  // ── Row 24: 1/4/20 | 270 hrs ─────────────────────────────────
-  seed('gi', '2020-01-04', 270, GI_NOTE);
-
-  // ── Row 25: 1/12/20 | 274 hrs ────────────────────────────────
-  seedOther('Avionics — ADS-B', '2020-01-12', 274, 'Install ADS-B in/out uAvioni bundle echo UAT/SkyFYX-EXT GPS');
-
-  // ── Row 26: 1/18/20 | 276 hrs ────────────────────────────────
-  seed('gi', '2020-01-18', 276, GI_NOTE);
-
-  // ── Row 27: 2/1/20 | 281-282 hrs ─────────────────────────────
-  seed('gi', '2020-02-01', 281, GI_NOTE);
-  seed('eo', '2020-02-01', 282, 'Chg Oil 3.5 Qts Sport Plus 4 & Tempest Filter; Ck metal plug & cut filter — no metal');
-
-  // ── Row 28: 2/15/20 | 286 hrs ────────────────────────────────
-  seed('gi', '2020-02-15', 286, GI_NOTE);
-
-  // ── Row 29: 5/11/20 | 292 hrs ────────────────────────────────
-  seed('gi', '2020-05-11', 292, GI_NOTE);
-
-  // ── Row 30: 5/20/20 | 295 hrs ────────────────────────────────
-  seed('sp', '2020-05-20', 295, 'Chg spark plugs NGK DPR9EA-9 torque 20nm $2.55 ea x 8');
-
-  // ── Row 31: 6/3/20 | 296 hrs ─────────────────────────────────
-  seed('ps', '2020-06-03', 296, 'Chg 4 main air lines from rotor & rear belt cylinder to front near compressor');
-
-  // ── Row 32: 8/13/20 | 301 hrs ────────────────────────────────
-  seedOther('Maintenance — Front Wheel Tube', '2020-08-13', 301, 'Chg front wheel tube 3.50/4.00 Carlisle TR87 valve');
-
-  // ── Row 33: 8/30/20 | 303 hrs ────────────────────────────────
-  seed('gi', '2020-08-30', 303, 'Annual/Condition Inspection; Complied with factory ADs since new to present; R&R Rotor Bushings and bolt; New brake shoes; New throttle lever bushings & Pilot brake paw assembly');
-  seed('eo', '2020-08-30', 303, 'Oil, oil filter and radiator fluid changed');
-  seed('rh', '2020-08-30', 303, '5 year engine rubber replacement AD; R&R all rubber hoses');
-  seed('em', '2020-08-30', 303, 'Engine mounts replaced');
-  seedOther('Electrical — Radio Harness', '2020-08-30', 303, 'Installed new radio harness Pilot and CoPilot');
-
-  // ── bt, gh, tt for all annuals ───────────────────────────────
-  seed('bt', '2017-02-18', 37, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2017-02-18', 37, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2017-02-18', 37, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2018-04-20', 110, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2018-04-20', 110, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2018-04-20', 110, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2019-08-08', 192, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2019-08-08', 192, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2019-08-08', 192, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2019-11-19', 236, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2019-11-19', 236, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2019-11-19', 236, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2019-11-29', 240, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2019-11-29', 240, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2019-11-29', 240, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2019-12-07', 246, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2019-12-07', 246, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2019-12-07', 246, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2019-12-14', 251, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2019-12-14', 251, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2019-12-14', 251, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2019-12-29', 265, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2019-12-29', 265, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2019-12-29', 265, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2020-01-04', 270, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2020-01-04', 270, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2020-01-04', 270, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2020-01-18', 276, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2020-01-18', 276, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2020-01-18', 276, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2020-02-01', 281, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2020-02-01', 281, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2020-02-01', 281, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2020-02-15', 286, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2020-02-15', 286, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2020-02-15', 286, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2020-05-11', 292, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2020-05-11', 292, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2020-05-11', 292, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2020-08-30', 303, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2020-08-30', 303, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2020-08-30', 303, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2021-10-16', 349, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2021-10-16', 349, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2021-10-16', 349, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-  seed('bt', '2023-05-07', 457, 'Battery inspected — soundness, attachment and fluid condition checked as per 100hr annual inspection');
-  seed('gh', '2023-05-07', 457, 'Gimbal head inspected — hinge points, end stop angles verified as per 100hr annual inspection');
-  seed('tt', '2023-05-07', 457, 'Teeter hinge lubricated — teeter bolt cleaned, bushings inspected, AG-GRS-01 grease applied as per 100hr annual inspection');
-
-  // ── tc for all annuals ───────────────────────────────────────
-  seed('tc', '2017-02-18', 37, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2018-04-20', 110, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2019-08-08', 192, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2019-11-19', 236, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2019-11-29', 240, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2019-12-07', 246, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2019-12-14', 251, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2019-12-29', 265, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2020-01-04', 270, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2020-01-18', 276, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2020-02-01', 281, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2020-02-15', 286, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2020-05-11', 292, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2020-08-30', 303, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2021-10-16', 349, 'Inspected as per 100hr annual inspection');
-  seed('tc', '2023-05-07', 457, 'Inspected as per 100hr annual inspection');
-
-  // ── af & sp for missing annuals ──────────────────────────────
-  seed('af', '2017-02-18', 37, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2019-11-19', 236, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2019-11-29', 240, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2019-12-07', 246, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2019-12-14', 251, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2019-12-29', 265, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2020-01-04', 270, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2020-01-18', 276, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2020-02-01', 281, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2020-02-15', 286, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2020-05-11', 292, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2020-08-30', 303, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('af', '2021-10-16', 349, 'Inspected/cleaned as per 100hr annual inspection');
-  seed('sp', '2017-02-18', 37, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2019-11-19', 236, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2019-11-29', 240, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2019-12-07', 246, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2019-12-14', 251, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2019-12-29', 265, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2020-01-04', 270, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2020-01-18', 276, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2020-02-01', 281, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2020-02-15', 286, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2020-05-11', 292, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2020-08-30', 303, 'Inspected/re-gapped as per 100hr annual inspection');
-  seed('sp', '2021-10-16', 349, 'Inspected/re-gapped as per 100hr annual inspection');
-
-  // ── New entries: 2021-2025 ────────────────────────────────────
-  seed('rb', '2017-02-18', 37, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2018-04-20', 110, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2019-08-08', 192, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2019-11-19', 236, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2019-11-29', 240, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2019-12-07', 246, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2019-12-14', 251, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2019-12-29', 265, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2020-01-04', 270, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2020-01-18', 276, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2020-02-01', 281, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2020-02-15', 286, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2020-05-11', 292, 'Inspected as per 100hr annual inspection');
-  seed('rb', '2020-08-30', 303, 'During 2020 Annual Inspection - Rotor head bridge, teeter stops & tower inspected for damage; main bolt castle nut torque-checked to 120 Nm and split pin replaced.');
-  seedOther('Carburetor Floats', '2021-07-29', 320, 'Replaced 4 floats on N959MC (S.N. M00979). Float had Bs stamped on replaced R. Cyl/Mfr 7197713 ex. 12-31-21');
-  seed('tc', '2021-07-29', 320, 'Cleaned out turbo line twice and covered with heat shield');
-  seed('rb', '2021-10-16', 349, 'During 2021 Annual Inspection - Rotor head bridge, teeter stops & tower inspected for damage; main bolt castle nut torque-checked to 120 Nm and split pin replaced.');
-  seed('gi', '2021-10-16', 349, GI_NOTE);
-  seed('rb', '2023-05-07', 457, 'Greased rotor head. Rotor removed & Inspected during 2023 Annual.');
-  seed('gi', '2023-05-07', 457, 'Brakes & Carbs disassembled & cleaned; Compression #1 = 120; #2 = 125; #3 = 125; #4 = 125. Prerotator disassembled & cleaned. Anti rust applied; Motor mounts replaced. Greased rotor head. Rotor removed & Inspected. New Dryer Air filter, New Fuel Filters. New Spark Plugs (NGK)');
-  seed('prs', '2023-05-07', 457, 'Prerotator disassembled & cleaned');
-  seed('em', '2023-05-07', 457, 'Motor mounts replaced');
-  seed('af', '2023-05-07', 457, 'New Dryer Air Filter');
-  seed('ff', '2023-05-07', 457, 'New Fuel Filters added during 2023 Annual Inspection');
-  seed('sp', '2023-05-07', 457, 'New Spark Plugs (NGK) installed during 2023 Annual Inspection');
-  seed('sp', '2025-08-20', 589, 'Denso (4111) X27EPR-U9 Spark Plugs installed by Owner (Ordered from amazon)');
-  seed('eo', '2025-11-01', 596, 'Oil and oil filter changed by the Owner, purchased from advancedpowerplant.com');
-  seed('tt', '2026-03-25', 620, 'Done by Owner, in supervision of Craig');
-
-  seedOther('Avionics — Compass', '2023-09-01', 479, 'Installed Falcon Vertical Card Compass Non TSO. Model# MCVC-2L-A-M');
-  seedOther('Avionics — MiniUni ASI GPS', '2023-09-01', 482, 'MiniUni 3.125" Flight Instrument - Unit Model ASI GPS Based');
-  seedOther('Gauges — Water & Oil Temp', '2023-12-15', 492, 'Water Temp and Oil Temp gauges installed');
-  seedOther('Fuel System — Tanks & Hosing', '2025-04-26', 561, 'Both fuel tanks replaced with fuel hosing and Fuel Filter. Work performed by Stephen, verified by Craig');
-  seed('ff', '2025-04-26', 561, 'Both fuel tanks replaced with fuel hosing and Fuel Filter. Work performed by Stephen, verified by Craig');
-  seedOther('Avionics — Cockpit Panel II', '2026-02-20', 608, 'Installation of Cockpit Panel II for bigger 10 inch iPad screen');
-
-  S.history.sort((a,b) => b.hours - a.hours);
+  S.history.sort(function(a,b){ return b.hours - a.hours; });
   save();
-  localStorage.setItem('_seed_full_v11', '1');
-  // Clear old seed flags so they don't interfere
-  localStorage.removeItem('_seed_rows7to12_v3');
 })();
 // ── ONE-TIME MIGRATION: fix rh taskName ──────────────────────────
 (function(){
@@ -6250,7 +6001,7 @@ function renderHistoryList(){
         <div class="history-dot"></div>
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;min-width:0;">
           <div style="flex:1;min-width:0;">
-            <div class="history-name"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${item.taskName}</span></div>
+            <div class="history-name"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${item.taskName}</span>${item.sample?'<span class="sample-badge">SAMPLE</span>':''}</div>
             <div class="hist-expand-wrap">
               <div>
                 <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)} · ${item.hours} hrs${item.notes ? ' · ' + item.notes : ''}</div>
@@ -6568,7 +6319,7 @@ function renderHistoryList(){
       el.innerHTML=`
         <div class="history-dot"></div>
         <div style="flex:1;min-width:0;">
-          <div class="history-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes ? item.notes : item.taskName}</div>
+          <div class="history-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes ? item.notes : item.taskName}${item.sample?'<span class="sample-badge">SAMPLE</span>':''}</div>
           <div class="hist-expand-wrap">
             <div>
               <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)} · ${item.hours} hrs${item.notes ? ' · ' + item.notes : ''}</div>
@@ -6765,7 +6516,7 @@ function renderHistoryList(){
       el.innerHTML=`
         <div class="history-dot"></div>
         <div style="flex:1;min-width:0;">
-          <div class="history-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes ? item.notes : item.taskName}</div>
+          <div class="history-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes ? item.notes : item.taskName}${item.sample?'<span class="sample-badge">SAMPLE</span>':''}</div>
           <div class="hist-expand-wrap">
             <div>
               <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)} · ${item.hours} hrs${item.notes ? ' · ' + item.notes : ''}</div>
@@ -15089,7 +14840,111 @@ window.addEventListener('scroll',()=>{
 document.addEventListener("DOMContentLoaded", function() { init(); });
 
 // ═══ LOGBOOK ═══
-let LB = JSON.parse(localStorage.getItem('lb_data') || 'null') || [{"id": "lb_1", "date": "2021-11-15", "time": "04:43 PM", "from": "KPWG", "to": "87TX via KINJ", "duration": "0:01", "remarks": ""}, {"id": "lb_2", "date": "2021-11-28", "time": "05:20 PM", "from": "KPWG", "to": "87TX via KINJ", "duration": "0:02", "remarks": ""}, {"id": "lb_3", "date": "2021-12-31", "time": "01:02 AM", "from": "31.49,-97.29", "to": "KPWG", "duration": "0:01", "remarks": ""}, {"id": "lb_4", "date": "2021-12-31", "time": "01:04 AM", "from": "KPWG", "to": "87TX", "duration": "0:23", "remarks": ""}, {"id": "lb_5", "date": "2022-01-01", "time": "07:31 PM", "from": "87TX", "to": "KCPT", "duration": "0:33", "remarks": ""}, {"id": "lb_6", "date": "2022-01-01", "time": "08:13 PM", "from": "87TX", "to": "KCPT", "duration": "0:38", "remarks": ""}, {"id": "lb_7", "date": "2022-01-13", "time": "08:30 PM", "from": "No Flight Plan", "to": "", "duration": "2:52", "remarks": ""}, {"id": "lb_8", "date": "2022-01-15", "time": "11:26 PM", "from": "87TX", "to": "HOME via 3134N09720W", "duration": "0:22", "remarks": ""}, {"id": "lb_9", "date": "2022-02-13", "time": "07:49 PM", "from": "Home", "to": "", "duration": "1:16", "remarks": ""}, {"id": "lb_10", "date": "2022-02-20", "time": "08:16 PM", "from": "Home", "to": "", "duration": "1:18", "remarks": ""}, {"id": "lb_11", "date": "2022-03-05", "time": "05:55 PM", "from": "Home", "to": "", "duration": "2:37", "remarks": ""}, {"id": "lb_12", "date": "2022-03-19", "time": "07:55 PM", "from": "Home", "to": "", "duration": "1:28", "remarks": ""}, {"id": "lb_13", "date": "2022-03-27", "time": "06:10 PM", "from": "Home", "to": "", "duration": "2:09", "remarks": ""}, {"id": "lb_14", "date": "2022-04-02", "time": "06:19 PM", "from": "32.46,-97.76", "to": "87TX", "duration": "0:24", "remarks": ""}, {"id": "lb_15", "date": "2022-04-02", "time": "06:47 PM", "from": "87TX", "to": "KGDJ", "duration": "1:16", "remarks": ""}, {"id": "lb_16", "date": "2022-04-02", "time": "08:05 PM", "from": "32.48,-97.79", "to": "87TX", "duration": "0:17", "remarks": ""}, {"id": "lb_17", "date": "2022-04-16", "time": "07:24 PM", "from": "KPWG", "to": "87TX", "duration": "1:33", "remarks": ""}, {"id": "lb_18", "date": "2022-04-30", "time": "05:59 PM", "from": "87TX", "to": "HOME", "duration": "5:07", "remarks": ""}, {"id": "lb_19", "date": "2022-05-01", "time": "07:11 PM", "from": "87TX", "to": "HOME via 31TX", "duration": "1:42", "remarks": ""}, {"id": "lb_20", "date": "2022-05-14", "time": "04:19 PM", "from": "87TX", "to": "HOME via 31TX", "duration": "0:03", "remarks": ""}, {"id": "lb_21", "date": "2022-05-28", "time": "06:24 PM", "from": "87TX", "to": "66TE", "duration": "2:13", "remarks": ""}, {"id": "lb_22", "date": "2022-06-04", "time": "12:10 PM", "from": "32.62,-97.96", "to": "87TX", "duration": "1:35", "remarks": ""}, {"id": "lb_23", "date": "2022-06-11", "time": "08:26 AM", "from": "32.32,-97.80", "to": "87TX", "duration": "0:59", "remarks": ""}, {"id": "lb_24", "date": "2022-06-18", "time": "09:19 AM", "from": "32.18,-97.57", "to": "87TX", "duration": "1:18", "remarks": ""}, {"id": "lb_25", "date": "2022-06-18", "time": "10:42 AM", "from": "31.98,-97.38", "to": "87TX", "duration": "0:22", "remarks": ""}, {"id": "lb_26", "date": "2022-06-28", "time": "05:11 PM", "from": "31.98,-97.38", "to": "87TX", "duration": "1:11", "remarks": ""}, {"id": "lb_27", "date": "2022-07-10", "time": "08:16 AM", "from": "32.32,-97.75", "to": "87TX", "duration": "1:41", "remarks": ""}, {"id": "lb_28", "date": "2022-07-16", "time": "09:00 AM", "from": "87TX", "to": "lake aqu..", "duration": "2:33", "remarks": ""}, {"id": "lb_29", "date": "2022-07-23", "time": "09:40 AM", "from": "No Flight Plan", "to": "", "duration": "8:17", "remarks": ""}, {"id": "lb_30", "date": "2022-07-24", "time": "05:49 PM", "from": "31.19,-97.50", "to": "87TX", "duration": "0:16", "remarks": ""}, {"id": "lb_31", "date": "2022-08-14", "time": "10:25 AM", "from": "31.49,-97.29", "to": "Belton I. via 3118N09721W", "duration": "0:05", "remarks": ""}, {"id": "lb_32", "date": "2022-08-14", "time": "10:31 AM", "from": "31.49,-97.29", "to": "Belton I. via 3118N09721W", "duration": "1:36", "remarks": ""}, {"id": "lb_33", "date": "2022-08-20", "time": "12:03 PM", "from": "87TX", "to": "KINJ", "duration": "0:53", "remarks": ""}, {"id": "lb_34", "date": "2022-09-03", "time": "12:14 PM", "from": "32.34,-97.62", "to": "87TX", "duration": "0:24", "remarks": ""}, {"id": "lb_35", "date": "2022-09-05", "time": "11:26 AM", "from": "32.34,-97.62", "to": "87TX", "duration": "0:48", "remarks": ""}, {"id": "lb_36", "date": "2022-09-10", "time": "01:29 PM", "from": "32.68,-98.04", "to": "87TX", "duration": "1:14", "remarks": ""}, {"id": "lb_37", "date": "2022-09-11", "time": "10:51 AM", "from": "32.56,-96.71", "to": "87TX", "duration": "0:22", "remarks": ""}, {"id": "lb_38", "date": "2022-09-17", "time": "11:43 AM", "from": "32.39,-97.71", "to": "87TX", "duration": "0:36", "remarks": ""}, {"id": "lb_39", "date": "2022-09-24", "time": "12:48 PM", "from": "87TX", "to": "KCPT via KINJ", "duration": "0:22", "remarks": ""}, {"id": "lb_40", "date": "2022-10-15", "time": "10:20 AM", "from": "87TX", "to": "Belton I.", "duration": "2:00", "remarks": ""}, {"id": "lb_41", "date": "2022-10-22", "time": "09:25 AM", "from": "31.15,-97.52", "to": "87TX via 3122N09731W", "duration": "1:32", "remarks": ""}, {"id": "lb_42", "date": "2022-10-22", "time": "09:54 PM", "from": "87TX", "to": "E38", "duration": "0:10", "remarks": ""}, {"id": "lb_43", "date": "2022-10-22", "time": "10:04 PM", "from": "87TX", "to": "E38", "duration": "0:00", "remarks": ""}, {"id": "lb_44", "date": "2022-11-06", "time": "12:10 PM", "from": "87TX", "to": "1E2", "duration": "2:40", "remarks": ""}, {"id": "lb_45", "date": "2022-11-06", "time": "02:57 PM", "from": "32.37,-97.79", "to": "87TX", "duration": "0:23", "remarks": ""}, {"id": "lb_46", "date": "2022-12-31", "time": "12:48 PM", "from": "KPWG", "to": "87TX", "duration": "0:22", "remarks": ""}, {"id": "lb_47", "date": "2023-01-07", "time": "12:34 PM", "from": "32.33,-97.69", "to": "87TX", "duration": "0:47", "remarks": ""}, {"id": "lb_48", "date": "2023-01-14", "time": "12:59 PM", "from": "No Flight Plan", "to": "", "duration": "0:05", "remarks": ""}, {"id": "lb_49", "date": "2023-01-16", "time": "12:17 PM", "from": "No Flight Plan", "to": "", "duration": "1:29", "remarks": ""}, {"id": "lb_50", "date": "2023-01-21", "time": "12:46 PM", "from": "32.09,-97.47", "to": "87TX", "duration": "0:46", "remarks": ""}, {"id": "lb_51", "date": "2023-02-05", "time": "11:54 AM", "from": "32.09,-97.47", "to": "87TX", "duration": "7:45", "remarks": ""}, {"id": "lb_52", "date": "2023-02-05", "time": "07:40 PM", "from": "87TX", "to": "KINJ", "duration": "0:42", "remarks": ""}, {"id": "lb_53", "date": "2023-02-25", "time": "10:44 AM", "from": "87TX", "to": "KINJ", "duration": "0:38", "remarks": ""}, {"id": "lb_54", "date": "2023-03-04", "time": "12:22 PM", "from": "87TX", "to": "INAPT", "duration": "2:24", "remarks": ""}, {"id": "lb_55", "date": "2023-03-18", "time": "01:34 PM", "from": "32.09,-97.16", "to": "87TX", "duration": "1:40", "remarks": ""}, {"id": "lb_56", "date": "2023-03-18", "time": "03:13 PM", "from": "32.09,-97.16", "to": "87TX", "duration": "0:00", "remarks": ""}, {"id": "lb_57", "date": "2023-03-25", "time": "12:12 PM", "from": "32.09,-97.16", "to": "87TX", "duration": "0:24", "remarks": ""}, {"id": "lb_58", "date": "2023-03-26", "time": "11:54 AM", "from": "32.09,-97.16", "to": "87TX", "duration": "1:32", "remarks": ""}, {"id": "lb_59", "date": "2023-04-15", "time": "04:35 PM", "from": "32.32,-97.80", "to": "87TX", "duration": "1:44", "remarks": ""}, {"id": "lb_60", "date": "2023-04-30", "time": "11:20 AM", "from": "31.94,-97.18", "to": "87TX", "duration": "6:19", "remarks": ""}, {"id": "lb_61", "date": "2023-04-30", "time": "11:38 AM", "from": "31.94,-97.18", "to": "87TX", "duration": "7:17", "remarks": ""}, {"id": "lb_62", "date": "2023-05-06", "time": "04:39 PM", "from": "32.37,-97.85", "to": "87TX", "duration": "0:57", "remarks": ""}, {"id": "lb_63", "date": "2023-05-07", "time": "12:57 PM", "from": "31.87,-97.37", "to": "87TX", "duration": "1:08", "remarks": ""}, {"id": "lb_64", "date": "2023-05-13", "time": "05:51 PM", "from": "32.28,-97.68", "to": "87TX", "duration": "0:57", "remarks": ""}, {"id": "lb_65", "date": "2023-05-20", "time": "10:42 AM", "from": "31.87,-97.35", "to": "87TX", "duration": "0:46", "remarks": ""}, {"id": "lb_66", "date": "2023-05-21", "time": "12:04 PM", "from": "31.87,-97.37", "to": "87TX", "duration": "0:57", "remarks": ""}, {"id": "lb_67", "date": "2023-05-27", "time": "11:28 AM", "from": "32.25,-97.51", "to": "87TX", "duration": "1:14", "remarks": ""}, {"id": "lb_68", "date": "2023-05-29", "time": "10:04 AM", "from": "32.03,-97.43", "to": "87TX", "duration": "1:35", "remarks": ""}, {"id": "lb_69", "date": "2023-06-03", "time": "10:47 AM", "from": "32.54,-97.83", "to": "87TX", "duration": "0:58", "remarks": ""}, {"id": "lb_70", "date": "2023-06-10", "time": "04:04 PM", "from": "87TX", "to": "KSEP", "duration": "1:55", "remarks": ""}, {"id": "lb_71", "date": "2023-06-17", "time": "11:31 AM", "from": "KSEP", "to": "87TX", "duration": "1:00", "remarks": ""}, {"id": "lb_72", "date": "2023-06-24", "time": "10:05 AM", "from": "32.00,-97.41", "to": "87TX", "duration": "1:14", "remarks": ""}, {"id": "lb_73", "date": "2023-07-04", "time": "09:46 AM", "from": "32.17,-97.85", "to": "87TX", "duration": "1:01", "remarks": ""}, {"id": "lb_74", "date": "2023-07-08", "time": "10:58 AM", "from": "31.94,-97.22", "to": "87TX", "duration": "1:00", "remarks": ""}, {"id": "lb_75", "date": "2023-07-15", "time": "08:58 AM", "from": "31.94,-97.22", "to": "87TX", "duration": "7:34", "remarks": ""}, {"id": "lb_76", "date": "2023-07-22", "time": "03:27 PM", "from": "32.17,-97.56", "to": "87TX", "duration": "0:59", "remarks": ""}, {"id": "lb_77", "date": "2023-08-05", "time": "03:28 PM", "from": "31.92,-97.19", "to": "87TX", "duration": "1:09", "remarks": ""}, {"id": "lb_78", "date": "2023-08-12", "time": "02:52 PM", "from": "31.92,-97.19", "to": "87TX", "duration": "1:13", "remarks": ""}, {"id": "lb_79", "date": "2023-08-26", "time": "03:13 PM", "from": "31.92,-97.19", "to": "87TX", "duration": "1:04", "remarks": ""}, {"id": "lb_80", "date": "2023-09-02", "time": "02:53 PM", "from": "31.92,-97.19", "to": "87TX", "duration": "1:34", "remarks": ""}, {"id": "lb_81", "date": "2023-09-09", "time": "03:00 PM", "from": "32.11,-97.42", "to": "87TX", "duration": "1:32", "remarks": ""}, {"id": "lb_82", "date": "2023-09-16", "time": "09:00 AM", "from": "32.04,-97.44", "to": "87TX", "duration": "6:52", "remarks": ""}, {"id": "lb_83", "date": "2023-09-16", "time": "02:30 PM", "from": "32.03,-97.43", "to": "87TX", "duration": "0:58", "remarks": ""}, {"id": "lb_84", "date": "2023-09-30", "time": "10:13 AM", "from": "31.90,-97.20", "to": "87TX", "duration": "1:14", "remarks": ""}, {"id": "lb_85", "date": "2023-10-14", "time": "05:40 PM", "from": "31.90,-97.20", "to": "87TX", "duration": "1:15", "remarks": ""}, {"id": "lb_86", "date": "2023-10-22", "time": "12:52 PM", "from": "87TX", "to": "AQO to T82", "duration": "0:51", "remarks": ""}, {"id": "lb_87", "date": "2023-10-22", "time": "02:15 PM", "from": "T82", "to": "KAQO", "duration": "2:38", "remarks": ""}, {"id": "lb_88", "date": "2023-10-22", "time": "03:03 PM", "from": "87TX", "to": "AQO to T82", "duration": "2:59", "remarks": ""}, {"id": "lb_89", "date": "2023-11-04", "time": "10:50 AM", "from": "31.64,-97.85", "to": "87TX", "duration": "1:37", "remarks": ""}, {"id": "lb_90", "date": "2023-11-12", "time": "12:50 PM", "from": "31.91,-97.21", "to": "87TX", "duration": "7:08", "remarks": ""}, {"id": "lb_91", "date": "2023-11-18", "time": "12:35 PM", "from": "31.91,-97.21", "to": "87TX", "duration": "1:04", "remarks": ""}, {"id": "lb_92", "date": "2023-12-03", "time": "10:46 AM", "from": "31.91,-97.21", "to": "87TX", "duration": "0:30", "remarks": ""}, {"id": "lb_93", "date": "2023-12-17", "time": "05:53 PM", "from": "31.91,-97.21", "to": "87TX", "duration": "1:07", "remarks": ""}, {"id": "lb_94", "date": "2024-01-07", "time": "11:29 AM", "from": "31.91,-97.21", "to": "87TX", "duration": "6:09", "remarks": ""}, {"id": "lb_95", "date": "2024-01-18", "time": "03:17 PM", "from": "31.91,-97.21", "to": "87TX", "duration": "6:08", "remarks": ""}, {"id": "lb_96", "date": "2024-01-18", "time": "09:29 PM", "from": "31.91,-97.21", "to": "87TX", "duration": "0:49", "remarks": ""}, {"id": "lb_97", "date": "2024-01-29", "time": "03:19 PM", "from": "31.91,-97.21", "to": "87TX", "duration": "0:58", "remarks": ""}, {"id": "lb_98", "date": "2024-02-03", "time": "12:03 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:54", "remarks": ""}, {"id": "lb_99", "date": "2024-02-24", "time": "05:05 PM", "from": "31.86,-97.30", "to": "87TX", "duration": "0:55", "remarks": ""}, {"id": "lb_100", "date": "2024-03-02", "time": "11:45 AM", "from": "31.86,-97.30", "to": "87TX", "duration": "0:51", "remarks": ""}, {"id": "lb_101", "date": "2024-03-11", "time": "03:44 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:53", "remarks": ""}, {"id": "lb_102", "date": "2024-03-14", "time": "03:51 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:35", "remarks": ""}, {"id": "lb_103", "date": "2024-03-23", "time": "05:03 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:55", "remarks": ""}, {"id": "lb_104", "date": "2024-03-28", "time": "03:11 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:28", "remarks": ""}, {"id": "lb_105", "date": "2024-03-30", "time": "04:53 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:09", "remarks": ""}, {"id": "lb_106", "date": "2024-04-04", "time": "03:24 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:06", "remarks": ""}, {"id": "lb_107", "date": "2024-04-07", "time": "06:11 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:46", "remarks": ""}, {"id": "lb_108", "date": "2024-04-11", "time": "03:59 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:47", "remarks": ""}, {"id": "lb_109", "date": "2024-04-18", "time": "03:23 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:58", "remarks": ""}, {"id": "lb_110", "date": "2024-04-24", "time": "04:03 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:00", "remarks": ""}, {"id": "lb_111", "date": "2024-04-30", "time": "03:54 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "7:21", "remarks": ""}, {"id": "lb_112", "date": "2024-05-05", "time": "11:26 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:16", "remarks": ""}, {"id": "lb_113", "date": "2024-05-07", "time": "03:39 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:17", "remarks": ""}, {"id": "lb_114", "date": "2024-05-11", "time": "03:58 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:19", "remarks": ""}, {"id": "lb_115", "date": "2024-05-14", "time": "03:30 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:23", "remarks": ""}, {"id": "lb_116", "date": "2024-05-18", "time": "02:54 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:29", "remarks": ""}, {"id": "lb_117", "date": "2024-05-25", "time": "08:26 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:49", "remarks": ""}, {"id": "lb_118", "date": "2024-06-01", "time": "10:45 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "7:21", "remarks": ""}, {"id": "lb_119", "date": "2024-06-08", "time": "08:35 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:21", "remarks": ""}, {"id": "lb_120", "date": "2024-06-15", "time": "09:33 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:13", "remarks": ""}, {"id": "lb_121", "date": "2024-06-22", "time": "09:12 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:22", "remarks": ""}, {"id": "lb_122", "date": "2024-06-29", "time": "08:58 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:15", "remarks": ""}, {"id": "lb_123", "date": "2024-07-13", "time": "05:36 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:30", "remarks": ""}, {"id": "lb_124", "date": "2024-07-14", "time": "11:12 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:52", "remarks": ""}, {"id": "lb_125", "date": "2024-07-27", "time": "12:00 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:44", "remarks": ""}, {"id": "lb_126", "date": "2024-08-03", "time": "09:34 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:53", "remarks": ""}, {"id": "lb_127", "date": "2024-08-10", "time": "03:04 PM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:46", "remarks": ""}, {"id": "lb_128", "date": "2024-08-11", "time": "10:57 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "0:45", "remarks": ""}, {"id": "lb_129", "date": "2024-08-17", "time": "08:33 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:05", "remarks": ""}, {"id": "lb_130", "date": "2024-08-24", "time": "09:02 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:03", "remarks": ""}, {"id": "lb_131", "date": "2024-08-31", "time": "08:47 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:16", "remarks": ""}, {"id": "lb_132", "date": "2024-09-02", "time": "10:24 AM", "from": "31.90,-97.21", "to": "87TX", "duration": "1:31", "remarks": ""}, {"id": "lb_133", "date": "2024-09-07", "time": "09:35 AM", "from": "31.87,-97.33", "to": "87TX", "duration": "1:09", "remarks": ""}, {"id": "lb_134", "date": "2024-09-08", "time": "10:36 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "0:57", "remarks": ""}, {"id": "lb_135", "date": "2024-09-14", "time": "09:40 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "1:00", "remarks": ""}, {"id": "lb_136", "date": "2024-09-15", "time": "10:25 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "0:58", "remarks": ""}, {"id": "lb_137", "date": "2024-09-21", "time": "09:36 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "1:14", "remarks": ""}, {"id": "lb_138", "date": "2024-09-22", "time": "10:13 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "1:08", "remarks": ""}, {"id": "lb_139", "date": "2024-09-28", "time": "03:13 PM", "from": "31.93,-97.20", "to": "87TX", "duration": "1:05", "remarks": ""}, {"id": "lb_140", "date": "2024-10-05", "time": "03:11 PM", "from": "31.93,-97.20", "to": "87TX", "duration": "1:10", "remarks": ""}, {"id": "lb_141", "date": "2024-10-12", "time": "09:29 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "0:58", "remarks": ""}, {"id": "lb_142", "date": "2024-10-19", "time": "10:19 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "6:52", "remarks": ""}, {"id": "lb_143", "date": "2024-10-19", "time": "04:11 PM", "from": "31.93,-97.20", "to": "87TX", "duration": "0:16", "remarks": ""}, {"id": "lb_144", "date": "2024-10-26", "time": "09:52 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "1:05", "remarks": ""}, {"id": "lb_145", "date": "2024-11-02", "time": "10:19 AM", "from": "31.93,-97.20", "to": "87TX", "duration": "1:02", "remarks": ""}, {"id": "lb_146", "date": "2024-11-09", "time": "11:56 AM", "from": "32.21,-97.66", "to": "87TX", "duration": "0:58", "remarks": ""}, {"id": "lb_147", "date": "2024-11-16", "time": "11:26 AM", "from": "31.97,-97.27", "to": "87TX", "duration": "0:56", "remarks": ""}, {"id": "lb_148", "date": "2024-11-23", "time": "11:48 AM", "from": "31.98,-97.18", "to": "87TX", "duration": "0:51", "remarks": ""}, {"id": "lb_149", "date": "2025-02-01", "time": "06:49 PM", "from": "31.98,-97.18", "to": "87TX", "duration": "1:16", "remarks": ""}, {"id": "lb_150", "date": "2025-02-02", "time": "12:26 PM", "from": "31.98,-97.18", "to": "87TX", "duration": "0:50", "remarks": ""}, {"id": "lb_151", "date": "2025-02-08", "time": "02:41 PM", "from": "31.98,-97.18", "to": "87TX", "duration": "1:11", "remarks": ""}, {"id": "lb_152", "date": "2025-03-01", "time": "01:45 PM", "from": "31.98,-97.18", "to": "87TX", "duration": "1:11", "remarks": ""}, {"id": "lb_153", "date": "2025-03-10", "time": "09:24 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:15", "remarks": ""}, {"id": "lb_154", "date": "2025-03-13", "time": "03:30 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:50", "remarks": ""}, {"id": "lb_155", "date": "2025-03-16", "time": "12:53 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:05", "remarks": ""}, {"id": "lb_156", "date": "2025-03-16", "time": "01:01 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:50", "remarks": ""}, {"id": "lb_157", "date": "2025-03-24", "time": "03:39 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:05", "remarks": ""}, {"id": "lb_158", "date": "2025-04-11", "time": "10:08 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:00", "remarks": ""}, {"id": "lb_159", "date": "2025-04-21", "time": "09:50 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:10", "remarks": ""}, {"id": "lb_160", "date": "2025-04-27", "time": "09:25 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "7:30", "remarks": ""}, {"id": "lb_161", "date": "2025-05-03", "time": "09:12 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "7:14", "remarks": ""}, {"id": "lb_162", "date": "2025-05-10", "time": "09:43 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:07", "remarks": ""}, {"id": "lb_163", "date": "2025-05-17", "time": "09:33 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:49", "remarks": ""}, {"id": "lb_164", "date": "2025-05-31", "time": "08:31 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:54", "remarks": ""}, {"id": "lb_165", "date": "2025-05-31", "time": "09:26 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:08", "remarks": ""}, {"id": "lb_166", "date": "2025-06-08", "time": "03:41 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:03", "remarks": ""}, {"id": "lb_167", "date": "2025-06-14", "time": "04:49 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:02", "remarks": ""}, {"id": "lb_168", "date": "2025-06-28", "time": "08:39 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:15", "remarks": ""}, {"id": "lb_169", "date": "2025-07-12", "time": "03:47 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:07", "remarks": ""}, {"id": "lb_170", "date": "2025-07-19", "time": "02:20 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:09", "remarks": ""}, {"id": "lb_171", "date": "2025-07-26", "time": "08:53 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:01", "remarks": ""}, {"id": "lb_172", "date": "2025-08-02", "time": "09:14 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:04", "remarks": ""}, {"id": "lb_173", "date": "2025-08-10", "time": "08:53 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:09", "remarks": ""}, {"id": "lb_174", "date": "2025-08-16", "time": "08:52 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:06", "remarks": ""}, {"id": "lb_175", "date": "2025-08-23", "time": "09:16 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:12", "remarks": ""}, {"id": "lb_176", "date": "2025-08-30", "time": "09:35 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:51", "remarks": ""}, {"id": "lb_177", "date": "2025-09-07", "time": "03:43 PM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:44", "remarks": ""}, {"id": "lb_178", "date": "2025-09-13", "time": "09:26 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:07", "remarks": ""}, {"id": "lb_179", "date": "2025-09-21", "time": "10:06 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "0:52", "remarks": ""}, {"id": "lb_180", "date": "2025-09-27", "time": "09:37 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:03", "remarks": ""}, {"id": "lb_181", "date": "2025-09-28", "time": "08:45 AM", "from": "31.94,-97.20", "to": "87TX", "duration": "1:24", "remarks": ""}, {"id": "lb_182", "date": "2025-10-04", "time": "09:00 AM", "from": "32.29,-97.73", "to": "87TX", "duration": "1:03", "remarks": ""}, {"id": "lb_183", "date": "2025-10-11", "time": "10:07 AM", "from": "31.96,-97.22", "to": "87TX", "duration": "0:56", "remarks": ""}, {"id": "lb_184", "date": "2025-10-18", "time": "07:47 AM", "from": "31.96,-97.22", "to": "87TX", "duration": "0:28", "remarks": ""}, {"id": "lb_185", "date": "2025-10-18", "time": "09:22 AM", "from": "KINJ", "to": "87XA", "duration": "0:34", "remarks": ""}, {"id": "lb_186", "date": "2025-10-25", "time": "11:36 AM", "from": "32.19,-97.09", "to": "87TX", "duration": "0:49", "remarks": ""}, {"id": "lb_187", "date": "2025-11-02", "time": "07:05 PM", "from": "32.19,-97.09", "to": "87TX", "duration": "0:51", "remarks": ""}, {"id": "lb_188", "date": "2025-11-08", "time": "11:08 AM", "from": "No Flight Plan", "to": "", "duration": "0:54", "remarks": ""}, {"id": "lb_189", "date": "2025-11-16", "time": "09:48 AM", "from": "No Flight Plan", "to": "", "duration": "1:21", "remarks": ""}];
+let LB = JSON.parse(localStorage.getItem('lb_data') || 'null') || [];
+(function(){
+  // ── Sample logbook flights (only when the history seed ACTUALLY RAN and
+  // no flights exist). The guard keys off real sample history rows — NOT the
+  // one-shot flag — so a beta → App Store updater with real history/profile
+  // but an empty logbook never receives sample flights. Uses the app's own
+  // lbSave() for persistence.
+  var _seededSampleHistory = (S.history||[]).some(function(e){ return e.sample; });
+  if(_seededSampleHistory && LB.length === 0){
+    function lbDaysAgo(n){ var d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+    // Synthetic demo path for the first flight: a gentle 10-point loop with
+    // 6-minute fixes, so the Path viewer has something to draw.
+    var _pts=[], _base=Date.now()-3*86400000;
+    for(var i=0;i<10;i++){
+      var _a=(i/10)*Math.PI*2;
+      _pts.push({lat:31.618+0.045*Math.sin(_a), lon:-97.228+0.055*Math.cos(_a), ts:_base+i*360000});
+    }
+    LB.push({id:'lb_sample_1', date:lbDaysAgo(3),  time:'09:15 AM', from:'KACT', to:'KACT',
+             duration:'0:55', remarks:'Sample flight — pattern work, 6 landings',
+             path:_pts, hasNativePath:true, sample:true});
+    LB.push({id:'lb_sample_2', date:lbDaysAgo(12), time:'02:30 PM', from:'KACT', to:'KGYI',
+             duration:'1:20', remarks:'Sample flight — cross-country', sample:true});
+    LB.push({id:'lb_sample_3', date:lbDaysAgo(26), time:'10:05 AM', from:'KGYI', to:'KACT',
+             duration:'1:15', remarks:'Sample flight — return leg, calm winds', sample:true});
+    LB.sort(function(a,b){ return b.date.localeCompare(a.date); });
+    try{ lbSave(); }catch(e){}
+  }
+
+  // ── Sample-data banner + one-tap clear (runs every boot) ───────────────
+  function _hasSampleData(){
+    try{
+      if((S.history||[]).some(function(e){ return e.sample; })) return true;
+      if((LB||[]).some(function(f){ return f.sample; })) return true;
+    }catch(e){}
+    return false;
+  }
+  function _injectSampleCSS(){
+    if(document.getElementById('sampleCSS')) return;
+    var st=document.createElement('style');
+    st.id='sampleCSS';
+    st.textContent =
+      '.sample-badge{display:inline-block;margin-left:6px;padding:1px 6px;font-size:9px;'
+      +'font-weight:800;letter-spacing:.08em;color:#0b0e14;background:#e8a838;border-radius:4px;'
+      +'vertical-align:middle;white-space:nowrap;}'
+      +'#sampleBanner{position:sticky;top:0;z-index:9999;display:flex;align-items:center;'
+      +'justify-content:space-between;gap:8px;padding:8px 12px;font-size:12px;color:#f5d78e;'
+      +'background:rgba(120,72,10,.92);border-bottom:1px solid #e8a838;}'
+      +'#sampleBanner button{flex:none;padding:6px 10px;font-size:11px;font-weight:700;color:#0b0e14;'
+      +'background:#e8a838;border:none;border-radius:8px;cursor:pointer;}';
+    document.head.appendChild(st);
+  }
+  window.clearSampleData = function(){
+    if(!confirm('Remove all sample data? Your own entries are never touched.')) return;
+    S.history = (S.history||[]).filter(function(e){ return !e.sample; });
+    for(var i=LB.length-1;i>=0;i--){ if(LB[i].sample) LB.splice(i,1); }
+    // Rebuild S.logged / S.otherLogged purely from remaining REAL history.
+    // Rows are partitioned by their recorded aircraftModel ('other' rows feed
+    // otherLogged, everything else feeds logged) and each bucket keeps the
+    // latest-by-max-hours entry per task — the app's own "latest" rule (see
+    // deleteHistoryEntry / saveEditedHistoryEntry). Sample-derived
+    // bookkeeping vanishes; real entries are preserved byte-for-byte.
+    var _rbL = {}, _rbO = {};
+    (S.history||[]).forEach(function(h){
+      if(!h.taskId || h.taskId === 'other') return;   // 'other' never has logged bookkeeping
+      var _bkt = (h.aircraftModel === 'other') ? _rbO : _rbL;
+      var _cur = _bkt[h.taskId];
+      if(!_cur || (h.hours||0) >= (_cur.hours||0)) _bkt[h.taskId] = h;
+    });
+    function _toLogEntry(h){ return {hrs:h.hours, date:h.date, dateTime:h.dateTime||'', notes:h.notes||''}; }
+    S.logged = {};
+    Object.keys(_rbL).forEach(function(t){ S.logged[t] = _toLogEntry(_rbL[t]); });
+    S.otherLogged = {};
+    Object.keys(_rbO).forEach(function(t){ S.otherLogged[t] = _toLogEntry(_rbO[t]); });
+    // Recompute S.jnpDate from the remaining REAL 100-hr inspection (gi)
+    // history — latest by max hours, mirroring the seed — or null when no
+    // real inspection remains. (The app's own delete path leaves jnpDate
+    // stale; Clear must not, or the Dashboard stays dirty.)
+    var _gi = (S.history||[]).filter(function(h){ return h.taskId === 'gi'; });
+    if(_gi.length){
+      var _latestGi = _gi.reduce(function(a,b){ return (a.hours||0) >= (b.hours||0) ? a : b; });
+      S.jnpDate = _latestGi.date || null;
+    } else {
+      S.jnpDate = null;
+    }
+    try{ save(); }catch(e){}
+    try{ lbSave(); }catch(e){}
+    var b=document.getElementById('sampleBanner'); if(b) b.remove();
+    try{ renderHistoryList(); }catch(e){}
+    try{ lbRenderList(); }catch(e){}
+    try{ renderDashLogbook(); }catch(e){}
+  };
+  if(_hasSampleData() && typeof document !== 'undefined'){
+    _injectSampleCSS();
+    if(!document.getElementById('sampleBanner')){
+      var bar=document.createElement('div');
+      bar.id='sampleBanner';
+      bar.innerHTML='<span>✈ You are viewing <b>sample data</b> — explore, then clear it to start fresh.</span>';
+      var btn=document.createElement('button');
+      btn.textContent='Clear sample data';
+      btn.onclick=function(){ window.clearSampleData(); };
+      bar.appendChild(btn);
+      document.body.insertBefore(bar, document.body.firstChild);
+    }
+  }
+})();
 let lbSelectedYear = 'all';
 let lbEditId = null;
 
@@ -15434,7 +15289,7 @@ function lbRenderList(){
         +'<div class="lb-swipe-bg"><button class="hist-btn" onclick="lbEdit(\''+f.id+'\')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button><button class="hist-btn delete-btn" onclick="lbDelete(\''+f.id+'\')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button></div>'
         +'<div class="lb-entry" data-lb-row="'+f.id+'">'
           +'<div><div class="lb-entry-date"><span class="lb-day">'+dd.day+'</span><span class="lb-month">'+dd.month+'</span></div><div class="lb-entry-time">'+f.time+'</div></div>'
-          +'<div><div class="lb-entry-route" title="'+route+'">'+route+'</div>'
+          +'<div><div class="lb-entry-route" title="'+route+'">'+route+'</div>'+(f.sample?'<span class="sample-badge">SAMPLE</span>':'')
             +(f.remarks?'<div class="lb-entry-remarks">'+f.remarks+'</div>':'')
             +((f.hasNativePath || (f.path && f.path.length>1)) ? '<button class="lb-path-btn" onclick="lbOpenPath(\''+f.id+'\')">✈ Path</button>' : '')
           +'</div>'
