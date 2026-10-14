@@ -2,7 +2,7 @@
   "name": "GyroCare Pro",
   "short_name": "GyroCare",
   "description": "Gyroplane maintenance & flight tracking",
-  "start_url": "/GyroCare-Pro/",
+  "start_url": "/GyroCare-Pro/app.html",
   "scope": "/GyroCare-Pro/",
   "display": "standalone",
   "orientation": "portrait",
