@@ -53,9 +53,10 @@
   .cta-row { display:flex; gap:18px; justify-content:center; align-items:center;
              margin-top:30px; flex-wrap:wrap; }
   .cta-row .storebadge { width:200px; }
-  .cta-row .ghost { color:var(--ink); border:1px solid rgba(255,255,255,0.35); padding:12px 28px;
-                    border-radius:999px; text-decoration:none; font-weight:700; }
-  .cta-row .ghost:hover { border-color:#fff; }
+  .cta-row .demo { color:var(--gold); border:1px solid var(--gold); padding:12px 28px;
+                   border-radius:999px; text-decoration:none; font-weight:700;
+                   box-shadow:0 0 24px rgba(245,179,1,0.25); }
+  .cta-row .demo:hover { background:rgba(245,179,1,0.12); }
   /* tiles */
   .tiles { padding:70px 0 10px; }
   .tiles .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
@@ -90,6 +91,17 @@
               box-shadow:0 24px 60px rgba(0,0,0,0.6); }
   .shot .ph img { display:block; width:100%; }
   .shot p { font-size:13.5px; color:var(--mut); margin-top:12px; }
+  /* tours */
+  .tours { padding:80px 0; }
+  .tourgrid { display:grid; grid-template-columns:repeat(2,minmax(0,340px)); gap:44px;
+              justify-content:center; }
+  @media (max-width:760px){ .tourgrid { grid-template-columns:minmax(0,320px); } }
+  .tour { text-align:center; }
+  .tour .tframe { background:#000; border-radius:26px; border:5px solid #2A2E35; overflow:hidden;
+                  box-shadow:0 24px 60px rgba(0,0,0,0.6); max-width:340px; margin:0 auto; }
+  .tour .tframe video { display:block; width:100%; }
+  .tour p { font-size:14px; color:var(--mut); margin-top:14px; font-weight:700;
+            letter-spacing:2px; text-transform:uppercase; }
   /* details */
   .details { background:var(--card); border-top:1px solid rgba(255,255,255,0.07);
              border-bottom:1px solid rgba(255,255,255,0.07); padding:80px 0; }
@@ -161,7 +173,7 @@
     <div><span class="pill">FIRST MONTH FREE</span></div>
     <div class="cta-row">
       <a href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486"><img class="storebadge" src="assets/appstore-badge.svg" alt="Download on the App Store"></a>
-      <a class="ghost" href="#features">See what it does</a>
+      <a class="demo" href="app.html">Try the live demo</a>
     </div>
   </div>
 </header>
@@ -202,6 +214,26 @@
       <div class="shot"><span class="lab">Wind Compass</span><div class="ph"><img src="assets/shot-wind-mag2.jpg" alt="Wind compass"></div><p>Live wind, gusts and direction — built for the preflight walk-around.</p></div>
       <div class="shot"><span class="lab">Logbook</span><div class="ph"><img src="assets/shot-logbook.jpg" alt="Logbook"></div><p>Hours timeline, per-year breakdown, CSV and PDF export.</p></div>
       <div class="shot"><span class="lab">Maintenance</span><div class="ph"><img src="assets/shot-maint2.jpg" alt="Maintenance"></div><p>Every manual task, scheduled against your tachometer.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="tours" id="tours">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kick">Watch it in action</div>
+      <h2>See the app fly</h2>
+      <p>Two quick tours, recorded from the real app — maintenance tracking and flight tracking.</p>
+    </div>
+    <div class="tourgrid">
+      <div class="tour">
+        <div class="tframe"><video src="assets/tour-maintenance.mp4" muted autoplay loop playsinline preload="metadata"></video></div>
+        <p>Maintenance tour</p>
+      </div>
+      <div class="tour">
+        <div class="tframe"><video src="assets/tour-tracking.mp4" muted autoplay loop playsinline preload="metadata"></video></div>
+        <p>Flight tracking tour</p>
+      </div>
     </div>
   </div>
 </section>
