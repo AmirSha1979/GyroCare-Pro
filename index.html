@@ -81,6 +81,7 @@
   .sec-head h2 { font-size:clamp(30px,4.5vw,44px); font-weight:900; margin-top:10px; }
   .sec-head p { color:var(--mut); max-width:640px; margin:12px auto 0; }
   .shotgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:22px; align-items:start; }
+  .shotgrid-3 { grid-template-columns:repeat(3,1fr); max-width:880px; margin:26px auto 0; }
   @media (max-width:1020px){ .shotgrid { grid-template-columns:repeat(3,1fr); } }
   @media (max-width:640px){ .shotgrid { grid-template-columns:repeat(2,1fr); } }
   .shot { text-align:center; }
@@ -214,6 +215,8 @@
       <div class="shot"><span class="lab">Dashboard</span><div class="ph"><img src="assets/shot-dash.jpg" alt="Dashboard"></div><p>Tach hours, notifications and maintenance summary at a glance.</p></div>
       <div class="shot"><span class="lab">Wind Compass</span><div class="ph"><img src="assets/shot-wind-mag2.jpg" alt="Wind compass"></div><p>Live wind, gusts and direction — built for the preflight walk-around.</p></div>
       <div class="shot"><span class="lab">Logbook</span><div class="ph"><img src="assets/shot-logbook.jpg" alt="Logbook"></div><p>Hours timeline, per-year breakdown, CSV and PDF export.</p></div>
+    </div>
+    <div class="shotgrid shotgrid-3">
       <div class="shot"><span class="lab">Maintenance</span><div class="ph"><img src="assets/shot-maint2.jpg" alt="Maintenance"></div><p>Every manual task, scheduled against your tachometer.</p></div>
       <div class="shot"><span class="lab">History</span><div class="ph"><img src="assets/shot-history.jpg" alt="History"></div><p>Complete maintenance log — every task, date and tach hour, filterable by category.</p></div>
       <div class="shot"><span class="lab">Preflight Weather</span><div class="ph"><img src="assets/shot-weather.jpg" alt="Preflight weather"></div><p>10-day wind forecast, density altitude and preflight checklist.</p></div>
