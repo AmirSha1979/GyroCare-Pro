@@ -54,6 +54,19 @@
   footer a { color:var(--ink); text-decoration:none; }
   footer a:hover { color:var(--gold); }
   footer .fl { display:flex; gap:22px; flex-wrap:wrap; }
+
+  .manualpromo { border-top:1px solid rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.08);
+                 background:var(--card); padding:56px 0; }
+  .manualgrid { display:grid; grid-template-columns:300px 1fr; gap:40px; align-items:center; }
+  @media (max-width:720px){ .manualgrid { grid-template-columns:1fr; } }
+  .manph img { display:block; width:100%; border-radius:18px; border:4px solid #2A2E35;
+                box-shadow:0 24px 60px rgba(0,0,0,0.6); }
+  .mancopy .kick { color:var(--gold); font-weight:800; letter-spacing:3px; font-size:13px; text-transform:uppercase; }
+  .mancopy h2 { font-size:clamp(26px,3.5vw,36px); font-weight:900; margin:10px 0 12px; }
+  .mancopy p { color:var(--mut); max-width:560px; }
+  .btngold { display:inline-block; margin-top:20px; background:var(--gold); color:#141414; font-weight:900;
+             font-size:16px; padding:14px 28px; border-radius:12px; text-decoration:none; }
+  .fineprint { font-size:12px; color:var(--mut); margin-top:10px; }
 </style>
 </head>
 <body>
@@ -77,6 +90,19 @@
     <p>Short, step-by-step guides to everything GyroCare Pro does — recorded live in the app. Tap any video to play it.</p>
   </div>
 </header>
+
+<section class="manualpromo">
+  <div class="wrap manualgrid">
+    <div class="manph"><img src="assets/shot-manual.jpg" alt="GyroCare Pro User Manual"></div>
+    <div class="mancopy">
+      <div class="kick">Free PDF</div>
+      <h2>GyroCare Pro User Manual</h2>
+      <p>Every video on this page, written out step by step with screenshots — from your first tach entry to exporting a flight into Google Earth. Print it, keep it in the hangar, or send it to a fellow pilot.</p>
+      <a class="btngold" href="assets/GyroCare-Pro-User-Manual.pdf">Download the PDF manual</a>
+      <p class="fineprint">34 pages · US Letter · print-ready</p>
+    </div>
+  </div>
+</section>
 
 <main class="wrap">
   <div class="vidgrid">
