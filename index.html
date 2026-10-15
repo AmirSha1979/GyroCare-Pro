@@ -31,6 +31,22 @@
   .navdl { background:linear-gradient(180deg,var(--gold-lt),var(--gold)); color:#1A1206 !important;
            padding:10px 22px; border-radius:999px; font-weight:800 !important; }
   @media (max-width:760px){ nav .links a:not(.navdl){ display:none; } }
+  /* mobile dropdown menu (option A) */
+  .burger { display:none; width:42px; height:42px; border:1px solid rgba(255,255,255,0.14);
+            border-radius:12px; background:rgba(255,255,255,0.05); color:var(--gold);
+            font-size:20px; cursor:pointer; align-items:center; justify-content:center; }
+  .mdrop { display:none; }
+  @media (max-width:760px){
+    .burger { display:inline-flex; }
+    nav .links { align-items:center; gap:10px; }
+    .mdrop { position:absolute; top:100%; left:0; right:0; background:rgba(7,10,18,0.98);
+             border-bottom:1px solid rgba(255,255,255,0.08); z-index:60; }
+    .mdrop.open { display:block; }
+    .mdrop a { display:block; padding:14px 24px; color:#e8ecf4; text-decoration:none;
+               font-size:16px; font-weight:600; border-top:1px solid rgba(255,255,255,0.06); }
+    .mdrop a:active { background:rgba(255,200,46,0.08); }
+    nav { position:sticky; }
+  }
   /* hero */
   .hero { position:relative; overflow:hidden; text-align:center; padding:110px 24px 90px; }
   .hero .bg { position:absolute; inset:0; }
@@ -160,9 +176,34 @@
       <a href="how-to.html">How-To &amp; Manual</a>
       <a href="#pricing">Pricing</a>
       <a class="navdl" href="#download">Download</a>
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">☰</button>
     </div>
   </div>
+  <div class="mdrop" id="mdrop">
+    <a href="#features">Features</a>
+    <a href="#screens">Screenshots</a>
+    <a href="how-to.html">How-To &amp; Manual</a>
+    <a href="#pricing">Pricing</a>
+  </div>
 </nav>
+<script>
+(function(){
+  var b = document.getElementById('burger'), m = document.getElementById('mdrop');
+  if(!b || !m) return;
+  b.addEventListener('click', function(e){
+    e.stopPropagation();
+    var open = m.classList.toggle('open');
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  m.addEventListener('click', function(e){
+    if(e.target.tagName === 'A'){ m.classList.remove('open'); b.setAttribute('aria-expanded','false'); }
+  });
+  document.addEventListener('click', function(e){
+    if(!m.classList.contains('open')) return;
+    if(!m.contains(e.target) && e.target !== b){ m.classList.remove('open'); b.setAttribute('aria-expanded','false'); }
+  });
+})();
+</script>
 
 <header class="hero" id="top">
   <div class="bg"><img src="assets/hero-bg.jpg" alt=""></div>
