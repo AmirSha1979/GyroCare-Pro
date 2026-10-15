@@ -17626,5 +17626,50 @@ function showInstallDone(){
      flight-tracking start/stop countdown overlays) so this is never covered
      by anything, including the compass full-screen sheet (z-index 500). -->
 <div id="gcAccuracyGlow" style="position:fixed;inset:0;z-index:10000;pointer-events:none;background:transparent;transition:background 0.6s ease;"></div>
+<!-- GyroCare Pro web-demo time lock: 15 minutes, then prompt to download the app.
+     Expiry persists in localStorage so reloading does not reset it. -->
+<script>
+(function(){
+  var LIMIT_MS = 15 * 60 * 1000;
+  var K_START = 'gyrocare_demo_start';
+  var K_DONE  = 'gyrocare_demo_done';
+  var store = null;
+  try { store = window.localStorage; } catch(e){ store = null; }
+  function now(){ return Date.now(); }
+  function lock(){
+    try { if(store) store.setItem(K_DONE, '1'); } catch(e){}
+    if(document.getElementById('demo-lock')) return;
+    var d = document.createElement('div');
+    d.id = 'demo-lock';
+    d.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;');
+    d.innerHTML =
+      '<div style="position:fixed;inset:0;z-index:2147483647;background:rgba(4,6,12,0.97);' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;">' +
+      '<div style="font-size:15px;font-weight:800;letter-spacing:3px;color:#FFC82E;margin-bottom:14px;">GYROCARE PRO</div>' +
+      '<div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:10px;">Your demo time is up</div>' +
+      '<div style="font-size:15px;color:#9aa3b5;max-width:300px;line-height:1.5;margin-bottom:26px;">' +
+      'You got the full tour. Now get the real thing and keep it in your hangar.</div>' +
+      '<a href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486" ' +
+      'style="display:inline-block;background:linear-gradient(180deg,#FFD75E,#FFC82E);color:#1A1206;' +
+      'font-weight:800;font-size:17px;padding:15px 42px;border-radius:999px;text-decoration:none;">' +
+      'Download on the App Store</a>' +
+      '<div style="margin-top:22px;font-size:13px;color:#5b6478;">Built by a pilot, for pilots.</div>' +
+      '</div>';
+    document.body.appendChild(d);
+  }
+  var expired = false;
+  try { expired = !!(store && store.getItem(K_DONE)); } catch(e){}
+  if(expired){ lock(); return; }
+  var start = 0;
+  try { start = parseInt(store.getItem(K_START) || '0', 10) || 0; } catch(e){}
+  if(!start){
+    start = now();
+    try { if(store) store.setItem(K_START, String(start)); } catch(e){}
+  }
+  var remaining = LIMIT_MS - (now() - start);
+  if(remaining <= 0){ lock(); return; }
+  setTimeout(lock, remaining);
+})();
+</script>
 </body>
 </html>
