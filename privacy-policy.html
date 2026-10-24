@@ -5,36 +5,95 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GyroCare Pro — Privacy Policy</title>
 <meta name="description" content="Privacy policy for GyroCare Pro. All data stays on your device.">
+<meta property="og:title" content="GyroCare Pro — Privacy Policy">
+<meta property="og:description" content="Privacy policy for GyroCare Pro. All data stays on your device.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gyrocarepro.app/privacy-policy.html">
+<meta property="og:image" content="https://gyrocarepro.app/assets/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://gyrocarepro.app/assets/og-card.jpg">
 <style>
-:root{--bg:#0a0d12;--panel:#121823;--line:#253044;--gold:#e8a838;--blue:#38BDF8;--text:#e6edf8;--muted:#93a0b5;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);line-height:1.7;
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;font-size:16px;padding:0 0 60px;}
-.wrap{max-width:720px;margin:0 auto;padding:0 20px;}
-header{border-bottom:1px solid var(--line);padding:38px 0 30px;margin-bottom:30px;
- background:linear-gradient(135deg,#16202f,#0f141c);}
-h1{font-size:29px;font-weight:800;} h1 span{color:var(--gold);}
-.sub{color:var(--muted);margin-top:7px;font-size:15px;}
-h2{font-size:20px;font-weight:800;margin:34px 0 11px;padding-top:6px;}
-h3{font-size:16px;font-weight:700;margin:20px 0 6px;color:var(--gold);}
-p{margin-bottom:13px;} a{color:var(--blue);}
-ul{margin:0 0 15px 22px;} li{margin-bottom:7px;}
-strong{color:var(--text);}
-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
-th,td{text-align:left;padding:9px 11px;border:1px solid var(--line);}
-th{background:var(--panel);font-weight:700;}
-hr{border:none;border-top:1px solid var(--line);margin:30px 0;}
-blockquote{border-left:3px solid var(--gold);padding-left:16px;color:var(--muted);margin:16px 0;}
-footer{border-top:1px solid var(--line);margin-top:46px;padding-top:20px;color:var(--muted);font-size:13px;}
-code{background:var(--panel);padding:2px 5px;border-radius:4px;font-size:14px;}
+:root{
+  --ink:#070D1A; --ink2:#0B1424; --panel:#101B31; --panel2:#0D1730;
+  --line:rgba(140,170,220,.16);
+  --txt:#EDF2FC; --mut:#9DB1D1; --mut2:#7288AC;
+  --gold:#F5B301; --gold2:#FFCF4D; --sky:#57B6FF;
+  --rad:20px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(1100px 520px at 85% -80px,rgba(245,179,1,.09),transparent 60%),radial-gradient(900px 620px at -12% 22%,rgba(87,182,255,.06),transparent 55%),var(--ink);
+  color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+header#hdr{position:sticky;top:0;z-index:50;background:rgba(7,13,26,.88);backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
+.nav{display:flex;align-items:center;gap:18px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:1.22rem;letter-spacing:-.01em;color:var(--txt)}
+.brand .mark{width:46px;height:46px;border-radius:12px;background:#0E1830;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.brand .mark img{width:44px}
+.brand em{font-style:normal;color:var(--gold)}
+.nav nav{margin-left:auto;display:flex;gap:30px;font-weight:600;color:var(--mut);font-size:.98rem}
+.nav nav a:hover{color:var(--txt)}
+.nav .badge-btn{margin-left:26px}
+.nav .badge-btn img{height:40px;display:block}
+@media(max-width:860px){.nav nav{display:none}.nav .badge-btn{margin-left:auto}}
+footer{border-top:1px solid var(--line);background:#05090F;padding:56px 0 40px;margin-top:70px}
+.foot{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:34px}
+.foot .brand{margin-bottom:12px}
+.foot p{color:var(--mut2);font-size:.94rem;max-width:30ch}
+.foot h4{font-size:.82rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:14px}
+.foot ul{list-style:none;display:grid;gap:9px;color:var(--mut);font-size:.97rem}
+.foot ul a:hover{color:var(--gold)}
+.ftbot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:36px;padding-top:22px;color:var(--mut2);font-size:.88rem}
+@media(max-width:760px){.foot{grid-template-columns:1fr 1fr}}
+.pagehead{text-align:center;padding:58px 22px 8px}
+.pagehead .kick{color:var(--gold);font-weight:800;letter-spacing:3px;font-size:13px;text-transform:uppercase}
+.pagehead h1{font-size:clamp(32px,5vw,48px);font-weight:900;margin-top:10px;letter-spacing:-.01em;line-height:1.12}
+.pagehead h1 span{color:var(--gold)}
+.pagehead .sub{color:var(--mut);max-width:640px;margin:12px auto 0;font-size:1.02rem}
+
+.doc{max-width:780px}
+body{line-height:1.7}
+h1{font-size:29px;font-weight:800} h1 span{color:var(--gold)}
+h2{font-size:20px;font-weight:800;margin:34px 0 11px;padding-top:6px}
+h3{font-size:16px;font-weight:700;margin:20px 0 6px;color:var(--gold)}
+.doc p{margin-bottom:13px;color:#C7D2E4}
+.doc a{color:var(--sky)}
+.doc ul{margin:0 0 15px 22px;color:#C7D2E4} .doc li{margin-bottom:7px}
+strong{color:var(--txt)}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th,td{text-align:left;padding:9px 11px;border:1px solid var(--line);color:#C7D2E4}
+th{background:var(--panel);font-weight:700;color:var(--txt)}
+hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+blockquote{border-left:3px solid var(--gold);padding-left:16px;color:var(--mut);margin:16px 0}
+code{background:var(--panel);padding:2px 5px;border-radius:4px;font-size:14px}
+.pagehead{text-align:left;padding:44px 0 0}
+.pagehead .sub{color:var(--mut);margin:7px 0 0;font-size:15px}
+
 </style>
 </head>
 <body>
-<header><div class="wrap">
-  <h1>GyroCare <span>Pro</span></h1>
-  <div class="sub">Privacy Policy</div>
-</div></header>
-<div class="wrap">
+<header id="hdr">
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><span class="mark"><img src="assets/logo.png" alt="GyroCare Pro logo"></span>GyroCare&nbsp;<em>Pro</em></a>
+    <nav>
+      <a href="index.html#features">Features</a>
+      <a href="index.html#watch">Watch</a>
+      <a href="index.html#screens">Screens</a>
+      <a href="how-to.html">How-To</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+    <a class="badge-btn" href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486"><img src="assets/appstore-badge.svg" alt="Download on the App Store"></a>
+  </div>
+</header>
+
+<div class="wrap doc"><div class="pagehead"><h1>GyroCare <span>Pro</span></h1><div class="sub">Privacy Policy</div></div></div>
+<div class="wrap doc">
 
 <p><strong>Last updated: 17 October 2026</strong></p>
 <h2>Summary</h2>
@@ -154,10 +213,45 @@ your behalf. No request to us is necessary.</p>
 policy at this URL. Material changes will be noted in the app's release notes.</p>
 <h2>12. Contact</h2>
 <p>Questions about this policy: <strong><a href="mailto:ahmarautogyro@gmail.com">ahmarautogyro@gmail.com</a></strong></p>
-<footer>
-  <a href="support.html">Support &amp; Help</a><br><br>
-  &copy; 2026 Ahmar Shaikh
-</footer>
+
 </div>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="index.html"><span class="mark"><img src="assets/logo.png" alt="GyroCare Pro logo"></span>GyroCare&nbsp;<em>Pro</em></a>
+        <p>The maintenance, logbook and flight companion for AutoGyro pilots. Built by a pilot, for pilots.</p>
+      </div>
+      <div>
+        <h4>App</h4>
+        <ul>
+          <li><a href="app.html">Live demo</a></li>
+          <li><a href="how-to.html">How-to videos</a></li>
+          <li><a href="assets/GyroCare-Pro-User-Manual.pdf">User manual (PDF)</a></li>
+          <li><a href="index.html#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul>
+          <li><a href="support.html">Support page</a></li>
+          <li><a href="mailto:ahmarautogyro@gmail.com">ahmarautogyro@gmail.com</a></li>
+          <li><a href="privacy-policy.html">Privacy policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Follow</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/gyroguy2021/">Instagram — @gyroguy2021</a></li>
+          <li><a href="https://www.youtube.com/@gyroguy786">YouTube — @gyroguy786</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ftbot">
+      <span>&copy; 2026 Ahmar Shaikh &middot; Waco, TX</span>
+      <span>Not affiliated with AutoGyro GmbH. AutoGyro is a trademark of its owner.</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
