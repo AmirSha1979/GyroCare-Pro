@@ -1,361 +1,556 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GyroCare Pro — Built by a pilot, for pilots.</title>
-<meta name="description" content="GyroCare Pro is the all-in-one iOS app for gyroplane pilots: maintenance tracking, flight tracking, logbook and wind compass. First month free.">
+<meta name="description" content="GyroCare Pro keeps your AutoGyro gyroplane, logbook and flights in one place — maintenance tracking, service bulletin alerts, GPS flight tracking and preflight weather. Free for 30 days on iOS.">
 <meta property="og:title" content="GyroCare Pro — Built by a pilot, for pilots.">
-<meta property="og:description" content="Maintenance · Tracking · Logbook · Weather — one app for gyroplane pilots. First month free.">
-<meta property="og:image" content="assets/hero-bg.jpg">
+<meta property="og:description" content="Maintenance, logbook, flights and weather for AutoGyro pilots. First 30 days free.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gyrocarepro.app/">
+<meta property="og:image" content="https://gyrocarepro.app/assets/hero-bg.jpg">
 <style>
-  @font-face { font-family:'Tagline'; src:url('assets/tagline.ttf'); }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --gold:#F5B301; --gold-lt:#FFD34D; --ink:#F2F5F9; --mut:#AEB6C2; --bg:#05080F; --card:#0C1119; }
-  html { scroll-behavior:smooth; }
-  body { background:var(--bg); color:var(--ink);
-         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-         line-height:1.6; }
-  .wrap { max-width:1120px; margin:0 auto; padding:0 24px; }
-  /* nav */
-  nav { position:sticky; top:0; z-index:50; background:rgba(5,8,15,0.85);
-        backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,0.08); }
-  nav .wrap { display:flex; align-items:center; justify-content:space-between; height:68px; }
-  .brand { display:flex; align-items:center; gap:12px; font-weight:800; font-size:20px;
-           color:#fff; text-decoration:none; }
-  .brand img { height:40px; }
-  .brand b { color:var(--gold); }
-  nav .links { display:flex; gap:28px; }
-  nav .links a { color:var(--mut); text-decoration:none; font-size:15px; font-weight:600; }
-  nav .links a:hover { color:#fff; }
-  .navdl { background:linear-gradient(180deg,var(--gold-lt),var(--gold)); color:#1A1206 !important;
-           padding:10px 22px; border-radius:999px; font-weight:800 !important; }
-  @media (max-width:760px){ nav .links a:not(.navdl){ display:none; } }
-  /* mobile dropdown menu (option A) */
-  .burger { display:none; width:42px; height:42px; border:1px solid rgba(255,255,255,0.14);
-            border-radius:12px; background:rgba(255,255,255,0.05); color:var(--gold);
-            font-size:20px; cursor:pointer; align-items:center; justify-content:center; }
-  .mdrop { display:none; }
-  @media (max-width:760px){
-    .burger { display:inline-flex; }
-    nav .links { align-items:center; gap:10px; }
-    .mdrop { position:absolute; top:100%; left:0; right:0; background:rgba(7,10,18,0.98);
-             border-bottom:1px solid rgba(255,255,255,0.08); z-index:60; }
-    .mdrop.open { display:block; }
-    .mdrop a { display:block; padding:14px 24px; color:#e8ecf4; text-decoration:none;
-               font-size:16px; font-weight:600; border-top:1px solid rgba(255,255,255,0.06); }
-    .mdrop a:active { background:rgba(255,200,46,0.08); }
-    nav { position:sticky; }
-  }
-  /* hero */
-  .hero { position:relative; overflow:hidden; text-align:center; padding:110px 24px 90px; }
-  .hero .bg { position:absolute; inset:0; }
-  .hero .bg img { width:100%; height:100%; object-fit:cover; object-position:center 30%; }
-  .hero .shade { position:absolute; inset:0;
-      background:linear-gradient(to bottom, rgba(5,8,15,0.55), rgba(5,8,15,0.35) 45%, rgba(5,8,15,0.94)); }
-  .hero .inner { position:relative; }
-  .hero .logo { width:min(420px,70vw); filter:drop-shadow(0 14px 40px rgba(0,0,0,0.8)); }
-  .hero h1 { font-size:clamp(48px,8vw,96px); font-weight:900; letter-spacing:1px;
-             margin-top:18px; text-shadow:0 8px 40px rgba(0,0,0,0.9); }
-  .hero h1 .pro { color:var(--gold); text-shadow:0 0 50px rgba(245,179,1,0.5), 0 8px 40px rgba(0,0,0,0.9); }
-  .hero .tag { font-family:'Tagline',cursive; font-size:clamp(34px,5vw,58px); color:#FFC82E;
-               margin-top:10px; text-shadow:0 0 14px rgba(245,179,1,0.3), 0 4px 18px rgba(0,0,0,0.9); }
-  .hero .one { font-size:clamp(15px,2.4vw,24px); font-weight:700; letter-spacing:3px; margin-top:14px;
-               text-transform:uppercase; color:var(--ink); text-shadow:0 4px 18px rgba(0,0,0,0.9); }
-  .pill { display:inline-block; margin-top:26px; background:linear-gradient(180deg,var(--gold-lt),var(--gold));
-          color:#1A1206; font-weight:900; letter-spacing:2px; font-size:16px;
-          padding:12px 34px; border-radius:999px;
-          box-shadow:0 0 44px rgba(245,179,1,0.55); }
-  .cta-row { display:flex; gap:18px; justify-content:center; align-items:center;
-             margin-top:30px; flex-wrap:wrap; }
-  .cta-row .storebadge { width:200px; }
-  .cta-row .demo { color:var(--gold); border:1px solid var(--gold); padding:12px 28px;
-                   border-radius:999px; text-decoration:none; font-weight:700;
-                   box-shadow:0 0 24px rgba(245,179,1,0.25); }
-  .cta-row .demo:hover { background:rgba(245,179,1,0.12); }
-  /* tiles */
-  .tiles { padding:70px 0 10px; }
-  .tiles .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-  @media (max-width:860px){ .tiles .grid { grid-template-columns:repeat(2,1fr); } }
-  .tile { background:var(--card); border:1px solid rgba(255,255,255,0.1); border-radius:20px;
-          padding:28px 20px; text-align:center; }
-  .tile .ic { width:64px; height:64px; margin:0 auto 14px; border-radius:18px;
-              display:flex; align-items:center; justify-content:center;
-              background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); }
-  .tile .ic svg { width:32px; height:32px; }
-  .tile h3 { font-size:17px; margin-bottom:8px; }
-  .tile p { font-size:14px; color:var(--mut); }
-  .t1 .ic { border-color:rgba(255,107,107,.5); box-shadow:0 0 24px rgba(255,107,107,.2); }
-  .t2 .ic { border-color:rgba(74,222,128,.5); box-shadow:0 0 24px rgba(74,222,128,.2); }
-  .t3 .ic { border-color:rgba(96,165,250,.5); box-shadow:0 0 24px rgba(96,165,250,.2); }
-  .t4 .ic { border-color:rgba(34,211,238,.5); box-shadow:0 0 24px rgba(34,211,238,.2); }
-  /* screenshots */
-  .shots { padding:80px 0; }
-  .sec-head { text-align:center; margin-bottom:44px; }
-  .sec-head .kick { color:var(--gold); font-weight:800; letter-spacing:3px; font-size:13px;
-                    text-transform:uppercase; }
-  .sec-head h2 { font-size:clamp(30px,4.5vw,44px); font-weight:900; margin-top:10px; }
-  .sec-head p { color:var(--mut); max-width:640px; margin:12px auto 0; }
-  .shotgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:22px; align-items:start; }
-  .shotgrid-3 { grid-template-columns:repeat(3,1fr); max-width:880px; margin:26px auto 0; }
-  @media (max-width:1020px){ .shotgrid { grid-template-columns:repeat(3,1fr); } }
-  @media (max-width:640px){ .shotgrid { grid-template-columns:repeat(2,1fr); } }
-  .shot { text-align:center; }
-  .shot .lab { display:inline-block; background:#FFC400; color:#141414; font-size:12px;
-               font-weight:900; letter-spacing:2px; text-transform:uppercase;
-               padding:7px 16px; border-radius:8px; border:2px solid #141414; margin-bottom:12px; }
-  .shot .ph { background:#000; border-radius:26px; border:5px solid #2A2E35; overflow:hidden;
-              box-shadow:0 24px 60px rgba(0,0,0,0.6); }
-  .shot .ph img { display:block; width:100%; }
-  .shot p { font-size:13.5px; color:var(--mut); margin-top:12px; }
-  /* tours */
-  .tours { padding:80px 0; }
-  .tourgrid { display:grid; grid-template-columns:repeat(2,minmax(0,340px)); gap:44px;
-              justify-content:center; }
-  @media (max-width:760px){ .tourgrid { grid-template-columns:minmax(0,320px); } }
-  .tour { text-align:center; }
-  .tour .tframe { background:#000; border-radius:26px; border:5px solid #2A2E35; overflow:hidden;
-                  box-shadow:0 24px 60px rgba(0,0,0,0.6); max-width:340px; margin:0 auto; }
-  .tour .tframe video { display:block; width:100%; }
-  .tour p { font-size:14px; color:var(--mut); margin-top:14px; font-weight:700;
-            letter-spacing:2px; text-transform:uppercase; }
-  /* details */
-  .details { background:var(--card); border-top:1px solid rgba(255,255,255,0.07);
-             border-bottom:1px solid rgba(255,255,255,0.07); padding:80px 0; }
-  .dgrid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px 40px; margin-top:36px; }
-  @media (max-width:760px){ .dgrid { grid-template-columns:1fr; } }
-  .d { display:flex; gap:16px; }
-  .d .n { flex:0 0 40px; height:40px; border-radius:12px; background:rgba(245,179,1,0.12);
-          border:1px solid rgba(245,179,1,0.4); color:var(--gold); font-weight:900;
-          display:flex; align-items:center; justify-content:center; }
-  .d h3 { font-size:17px; margin-bottom:4px; }
-  .d p { font-size:14.5px; color:var(--mut); }
-  /* pricing */
-  .pricing { padding:80px 0; text-align:center; }
-  .free { display:inline-block; background:linear-gradient(180deg,var(--gold-lt),var(--gold));
-          color:#1A1206; font-weight:900; letter-spacing:1px; padding:14px 40px;
-          border-radius:999px; font-size:18px; margin:26px 0 8px;
-          box-shadow:0 0 44px rgba(245,179,1,0.5); }
-  .psub { color:var(--mut); font-size:15px; }
-  .pcards { display:flex; gap:20px; justify-content:center; margin-top:34px; flex-wrap:wrap; }
-  .pcard { background:var(--card); border:1px solid rgba(255,255,255,0.1); border-radius:22px;
-           padding:36px 44px; min-width:260px; }
-  .pcard.hot { border-color:rgba(245,179,1,0.55); box-shadow:0 0 44px rgba(245,179,1,0.18); }
-  .pcard .per { color:var(--mut); font-size:13px; text-transform:uppercase; letter-spacing:2px; }
-  .pcard .pr { font-size:52px; font-weight:900; margin:8px 0 2px; }
-  .pcard .pr small { font-size:20px; color:var(--mut); font-weight:600; }
-  .pcard .sv { color:var(--gold); font-weight:800; font-size:14px; }
-  .pnote { color:var(--mut); font-size:13px; margin-top:26px; }
-  /* download */
-  .dl { padding:80px 0 100px; text-align:center;
-        background:linear-gradient(to bottom, transparent, rgba(245,179,1,0.05)); }
-  .qrrow { display:flex; gap:40px; justify-content:center; align-items:center; margin-top:34px;
-           flex-wrap:wrap; }
-  .qrcard { background:#fff; border-radius:24px; padding:20px; border:6px solid var(--gold);
-            box-shadow:0 0 70px rgba(245,179,1,0.5); }
-  .qrcard img { display:block; width:230px; height:230px; }
-  .dl .storebadge { width:220px; }
-  .dl .hint { color:var(--mut); font-size:14px; margin-top:18px; }
-  /* footer */
-  footer { border-top:1px solid rgba(255,255,255,0.08); padding:40px 0; color:var(--mut);
-           font-size:14px; }
-  footer .wrap { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
-  footer a { color:var(--ink); text-decoration:none; }
-  footer a:hover { color:var(--gold); }
-  footer .fl { display:flex; gap:22px; flex-wrap:wrap; }
+:root{
+  --ink:#070D1A; --ink2:#0B1424; --panel:#101B31; --panel2:#0D1730;
+  --line:rgba(140,170,220,.16);
+  --txt:#EDF2FC; --mut:#9DB1D1; --mut2:#7288AC;
+  --gold:#F5B301; --gold2:#FFCF4D; --sky:#57B6FF;
+  --rad:20px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+.eyebrow{letter-spacing:.22em;font-size:.78rem;font-weight:700;color:var(--gold);text-transform:uppercase}
+h1,h2,h3{line-height:1.12;font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(1.9rem,4.4vw,3rem);margin:.35em 0 .4em}
+.lede{color:var(--mut);font-size:clamp(1.02rem,1.6vw,1.2rem);max-width:56ch}
+section{padding:92px 0}
+section[id],.hero[id]{scroll-margin-top:76px}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.phone-float{animation:none!important}}
+
+/* ---------- header ---------- */
+header{position:fixed;inset:0 0 auto 0;z-index:50;transition:background .3s,box-shadow .3s}
+header.scrolled{background:rgba(7,13,26,.88);backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
+.nav{display:flex;align-items:center;gap:18px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:1.22rem;letter-spacing:-.01em}
+.brand .mark{width:46px;height:46px;border-radius:12px;background:#0E1830;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.brand .mark img{width:44px}
+.brand em{font-style:normal;color:var(--gold)}
+.nav nav{margin-left:auto;display:flex;gap:30px;font-weight:600;color:var(--mut);font-size:.98rem}
+.nav nav a:hover{color:var(--txt)}
+.nav .badge-btn{margin-left:26px}
+.nav .badge-btn img{height:40px}
+@media(max-width:860px){.nav nav{display:none}.nav .badge-btn{margin-left:auto}}
+
+/* ---------- mobile category bar (hidden on desktop) ---------- */
+.catbar{display:none}
+@media(max-width:860px){
+  .catbar{display:flex;gap:8px;overflow-x:auto;position:fixed;top:74px;left:0;right:0;z-index:40;background:rgba(7,13,26,.93);backdrop-filter:blur(12px);padding:10px 14px;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .catbar::-webkit-scrollbar{display:none}
+  .catbar a{flex:0 0 auto;padding:8px 15px;border:1px solid var(--line);border-radius:999px;font-weight:700;font-size:.9rem;color:#D7E3F7;background:var(--panel)}
+  .catbar a.gold{background:var(--gold);color:#161006;border-color:var(--gold)}
+}
+
+/* ---------- hero ---------- */
+.hero{position:relative;padding:172px 0 110px;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:url("assets/hero-bg.jpg") center 30%/cover no-repeat}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,13,26,.62) 0%,rgba(7,13,26,.55) 42%,var(--ink) 96%),linear-gradient(90deg,rgba(7,13,26,.72) 30%,rgba(7,13,26,.12) 75%)}
+.hero .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(2.6rem,6vw,4.4rem);margin:.3em 0 .35em}
+.hero h1 .gold{color:var(--gold)}
+.hero .cta-row{display:flex;align-items:center;gap:20px;margin:34px 0 12px;flex-wrap:wrap}
+.hero .cta-row .badge img{height:56px}
+.btn{display:inline-flex;align-items:center;gap:10px;background:rgba(16,27,49,.8);border:1px solid var(--line);padding:14px 22px;border-radius:999px;font-weight:700;backdrop-filter:blur(6px)}
+.btn:hover{border-color:var(--gold);color:var(--gold2)}
+.btn .tri{color:var(--gold)}
+.free-note{color:var(--mut);font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.chip{border:1px solid var(--line);background:rgba(13,23,48,.66);backdrop-filter:blur(6px);padding:9px 15px;border-radius:999px;font-size:.92rem;font-weight:600;color:#D7E3F7}
+.chip b{color:var(--gold);font-weight:800;margin-right:6px}
+@media(max-width:920px){.hero .wrap{grid-template-columns:1fr}.hero{padding-top:138px}}
+
+/* phone frame */
+.phone-stage{display:flex;justify-content:center}
+.phone{width:min(300px,74vw);aspect-ratio:300/615;border-radius:46px;background:#05080F;padding:11px;border:1px solid rgba(160,190,240,.35);box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 6px rgba(20,34,64,.55),0 0 90px rgba(245,179,1,.14);position:relative}
+.phone::before{content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);width:38%;height:22px;background:#05080F;border-radius:0 0 14px 14px;z-index:3}
+.phone img,.phone video{width:100%;height:100%;object-fit:cover;border-radius:36px}
+.phone-float{animation:floaty 7s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-14px) rotate(-1.2deg)}}
+
+/* ---------- strip ---------- */
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--ink2);padding:20px 0}
+.strip .wrap{display:flex;flex-wrap:wrap;gap:12px 34px;justify-content:center;text-align:center;font-weight:700;letter-spacing:.06em;font-size:.92rem;color:var(--mut)}
+.strip span b{color:var(--gold);margin-right:10px}
+
+/* ---------- feature cards ---------- */
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:44px}
+.feat{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--rad);padding:28px 24px}
+.feat .ic{width:52px;height:52px;border-radius:14px;background:rgba(245,179,1,.12);border:1px solid rgba(245,179,1,.35);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.feat .ic svg{width:27px;height:27px;stroke:var(--gold);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{font-size:1.14rem;margin-bottom:8px}
+.feat p{color:var(--mut);font-size:.97rem}
+@media(max-width:1020px){.feats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.feats{grid-template-columns:1fr}}
+
+/* ---------- reel ---------- */
+.reel-sec{background:radial-gradient(1000px 500px at 85% 20%,rgba(245,179,1,.10),transparent 60%),var(--ink2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.reel-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
+.reel-grid .phone{width:min(320px,78vw)}
+.reel-points{margin:26px 0 30px;display:grid;gap:14px}
+.reel-points li{list-style:none;display:flex;gap:12px;color:var(--mut);font-size:1.03rem}
+.reel-points li b{color:var(--gold)}
+@media(max-width:920px){.reel-grid{grid-template-columns:1fr}.reel-grid .phone-stage{order:-1}}
+
+/* ---------- screenshots ---------- */
+.shots{display:flex;flex-wrap:wrap;gap:34px 26px;justify-content:center;padding:36px 6px 10px}
+.shot{flex:0 0 auto;width:236px;text-align:center}
+
+/* ---------- how-to ---------- */
+.howto-sec{background:var(--ink2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.howtos{display:flex;flex-wrap:wrap;gap:30px 24px;justify-content:center;margin-top:44px}
+.htile{flex:0 0 auto;width:252px;text-align:center}
+.htile .hv{border-radius:26px;overflow:hidden;border:1px solid var(--line);background:#000;box-shadow:0 22px 44px rgba(0,0,0,.45)}
+.htile video{width:100%;aspect-ratio:886/1920;object-fit:cover;display:block;background:#000}
+.htile h3{font-size:1.02rem;margin-top:14px}
+.htile h3 .n{color:var(--gold);margin-right:7px}
+.htile p{color:var(--mut);font-size:.9rem;margin-top:3px}
+.shot .phone{width:236px;aspect-ratio:300/615;margin:0 auto 16px;box-shadow:0 26px 50px rgba(0,0,0,.5)}
+.shot h3{font-size:1.08rem}
+.shot p{color:var(--mut);font-size:.93rem;margin-top:5px;padding:0 4px}
+
+/* ---------- numbered cards ---------- */
+.cowl{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+.cowl .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);padding:28px 24px}
+.cowl .num{font-size:2rem;font-weight:800;color:var(--gold);line-height:1}
+.cowl h3{font-size:1.12rem;margin:12px 0 8px}
+.cowl p{color:var(--mut);font-size:.97rem}
+@media(max-width:1020px){.cowl{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.cowl{grid-template-columns:1fr}}
+
+/* ---------- videos ---------- */
+.vids{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:44px}
+.vid{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);overflow:hidden}
+.vid video{width:100%;aspect-ratio:16/9;object-fit:cover;background:#000}
+.vid .cap{padding:18px 22px}
+.vid h3{font-size:1.1rem}
+.vid p{color:var(--mut);font-size:.95rem;margin-top:4px}
+@media(max-width:760px){.vids{grid-template-columns:1fr}}
+
+/* ---------- story ---------- */
+.story{position:relative;overflow:hidden}
+.story-bg{position:absolute;inset:0;background:url("assets/sky-strip.jpg") center/cover no-repeat;opacity:.5}
+.story-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--ink) 2%,rgba(7,13,26,.55) 40%,var(--ink) 98%)}
+.story .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1.1fr .9fr;gap:52px;align-items:center}
+.story blockquote{font-size:clamp(1.3rem,2.4vw,1.7rem);font-weight:700;line-height:1.35;margin:18px 0}
+.story blockquote span{color:var(--gold)}
+.story p{color:#C6D4EC;margin-bottom:14px;max-width:52ch}
+.story .earth{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);overflow:hidden}
+.story .earth img{width:100%}
+.story .earth .cap{padding:16px 20px;color:var(--mut);font-size:.94rem}
+.story .earth .cap b{color:var(--txt)}
+@media(max-width:920px){.story .wrap{grid-template-columns:1fr}}
+
+/* ---------- manual ---------- */
+.manual .wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:52px;align-items:center}
+.manual .cover{border-radius:var(--rad);border:1px solid var(--line);box-shadow:0 30px 60px rgba(0,0,0,.5);overflow:hidden;max-width:400px}
+.btn-gold{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:#161006;padding:15px 26px;border-radius:999px;font-weight:800}
+.btn-gold:hover{background:var(--gold2)}
+@media(max-width:920px){.manual .wrap{grid-template-columns:1fr}.manual .cover{margin:0 auto}}
+
+/* ---------- pricing ---------- */
+.price-sec{background:var(--ink2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px;align-items:stretch}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);padding:30px 26px;display:flex;flex-direction:column}
+.plan.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(245,179,1,.10),var(--panel) 55%)}
+.plan .tag{align-self:flex-start;font-size:.74rem;font-weight:800;letter-spacing:.14em;color:var(--gold);border:1px solid rgba(245,179,1,.45);padding:5px 11px;border-radius:999px;text-transform:uppercase}
+.plan h3{font-size:1.25rem;margin:16px 0 4px}
+.plan .amt{font-size:2.3rem;font-weight:800;margin:8px 0 2px}
+.plan .amt small{font-size:1rem;color:var(--mut);font-weight:600}
+.plan p{color:var(--mut);font-size:.96rem}
+.plan ul{margin:16px 0 0 18px;color:var(--mut);font-size:.96rem;display:grid;gap:7px}
+.price-note{color:var(--mut2);text-align:center;margin-top:26px;font-size:.92rem}
+@media(max-width:920px){.price-grid{grid-template-columns:1fr}}
+
+/* ---------- faq ---------- */
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:44px}
+.faq .q{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);padding:26px 24px}
+.faq h3{font-size:1.08rem;margin-bottom:8px}
+.faq h3::before{content:"Q — ";color:var(--gold)}
+.faq p{color:var(--mut);font-size:.97rem}
+@media(max-width:820px){.faq{grid-template-columns:1fr}}
+
+/* ---------- download ---------- */
+.download{text-align:center}
+.dl-card{margin-top:40px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:28px;padding:46px 30px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.dl-card .qr{width:190px;height:190px;background:#fff;border-radius:18px;padding:12px}
+.dl-card .badge img{height:58px}
+.dl-card p{color:var(--mut)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);background:#05090F;padding:56px 0 40px}
+.foot{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:34px}
+.foot .brand{margin-bottom:12px}
+.foot p{color:var(--mut2);font-size:.94rem;max-width:30ch}
+.foot h4{font-size:.82rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:14px}
+.foot ul{list-style:none;display:grid;gap:9px;color:var(--mut);font-size:.97rem}
+.foot ul a:hover{color:var(--gold2)}
+.copyright{margin-top:44px;padding-top:22px;border-top:1px solid var(--line);color:var(--mut2);font-size:.88rem;display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:space-between}
+@media(max-width:860px){.foot{grid-template-columns:1fr 1fr}}
+
+/* ---------- mobile layout overrides (must stay last) ---------- */
+@media(max-width:860px){
+  section{padding:58px 0}
+  .shot{width:calc(50% - 13px)}
+  .shot .phone{width:100%}
+  .shot h3{font-size:.98rem}
+  .shot p{font-size:.85rem}
+  .htile{width:calc(50% - 12px)}
+  .htile h3{font-size:.9rem}
+}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="wrap">
-    <a class="brand" href="#top"><img src="assets/logo.png" alt="GyroCare Pro logo">GyroCare <b>Pro</b></a>
-    <div class="links">
+<header id="hdr">
+  <div class="wrap nav">
+    <a class="brand" href="#top"><span class="mark"><img src="assets/logo.png" alt="GyroCare Pro logo"></span>GyroCare&nbsp;<em>Pro</em></a>
+    <nav>
       <a href="#features">Features</a>
-      <a href="#screens">Screenshots</a>
-      <a href="how-to.html">How-To &amp; Manual</a>
+      <a href="#watch">Watch</a>
+      <a href="#screens">Screens</a>
+      <a href="#howto">How-To</a>
       <a href="#pricing">Pricing</a>
-      <a class="navdl" href="#download">Download</a>
-      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">☰</button>
-    </div>
-  </div>
-  <div class="mdrop" id="mdrop">
-    <a href="#features">Features</a>
-    <a href="#screens">Screenshots</a>
-    <a href="how-to.html">How-To &amp; Manual</a>
-    <a href="#pricing">Pricing</a>
-  </div>
-</nav>
-<script>
-(function(){
-  var b = document.getElementById('burger'), m = document.getElementById('mdrop');
-  if(!b || !m) return;
-  b.addEventListener('click', function(e){
-    e.stopPropagation();
-    var open = m.classList.toggle('open');
-    b.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  m.addEventListener('click', function(e){
-    if(e.target.tagName === 'A'){ m.classList.remove('open'); b.setAttribute('aria-expanded','false'); }
-  });
-  document.addEventListener('click', function(e){
-    if(!m.classList.contains('open')) return;
-    if(!m.contains(e.target) && e.target !== b){ m.classList.remove('open'); b.setAttribute('aria-expanded','false'); }
-  });
-})();
-</script>
-
-<header class="hero" id="top">
-  <div class="bg"><img src="assets/hero-bg.jpg" alt=""></div>
-  <div class="shade"></div>
-  <div class="inner wrap">
-    <img class="logo" src="assets/logo.png" alt="Gyroplane">
-    <h1>GyroCare <span class="pro">Pro</span></h1>
-    <div class="tag">Built by a pilot, for pilots.</div>
-    <div class="one">Maintenance &nbsp;·&nbsp; Tracking &nbsp;·&nbsp; Logbook &nbsp;·&nbsp; Weather — one app.</div>
-    <div><span class="pill">FIRST MONTH FREE</span></div>
-    <div class="cta-row">
-      <a href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486"><img class="storebadge" src="assets/appstore-badge.svg" alt="Download on the App Store"></a>
-      <a class="demo" href="app.html">Try the live demo</a>
-    </div>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="badge-btn" href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486"><img src="assets/appstore-badge.svg" alt="Download on the App Store"></a>
   </div>
 </header>
 
-<section class="tiles" id="features">
+<div class="catbar">
+  <a href="#features">Features</a>
+  <a href="#watch">Watch</a>
+  <a href="#screens">Screens</a>
+  <a href="#howto">How-To</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#faq">FAQ</a>
+  <a class="gold" href="#download">Download</a>
+</div>
+
+<!-- ================= HERO ================= -->
+<div class="hero" id="top">
+  <div class="hero-bg"></div>
   <div class="wrap">
-    <div class="grid">
-      <div class="tile t1">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
-        <h3>Bulletin Alerts</h3><p>New AutoGyro service bulletins land in your notifications the day they publish.</p>
+    <div>
+      <p class="eyebrow">For AutoGyro Pilots</p>
+      <h1>Your gyroplane,<br><span class="gold">perfectly kept.</span></h1>
+      <p class="lede">GyroCare Pro keeps your aircraft, your logbook and your flights in one place — maintenance tracked against tach time, service bulletins the day they publish, and preflight weather before every flight.</p>
+      <div class="cta-row">
+        <a class="badge" href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486"><img src="assets/appstore-badge.svg" alt="Download on the App Store"></a>
+        <a class="btn-gold" href="app.html">Try the live demo</a>
+        <a class="btn" href="#watch"><span class="tri">▶</span> Watch it in action</a>
       </div>
-      <div class="tile t2">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><polyline points="9 14 11 16 15 12"/></svg></div>
-        <h3>Maintenance Tracking</h3><p>100-hour, annual and calendar tasks tracked against tach time — nothing slips.</p>
+      <p class="free-note">Free for 30 days · No credit card · iPhone</p>
+      <div class="chips">
+        <span class="chip"><b>✦</b>Bulletin alerts</span>
+        <span class="chip"><b>✦</b>Maintenance tracking</span>
+        <span class="chip"><b>✦</b>GPS logbook</span>
+        <span class="chip"><b>✦</b>Wind compass</span>
       </div>
-      <div class="tile t3">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-        <h3>Google Earth Paths</h3><p>Export any flight as KML and relive it in Google Earth.</p>
+    </div>
+    <div class="phone-stage">
+      <div class="phone phone-float"><img src="assets/shot-dash.jpg" alt="GyroCare Pro dashboard"></div>
+    </div>
+  </div>
+</div>
+
+<div class="strip">
+  <div class="wrap">
+    <span><b>✦</b>ALL AUTOGYRO MODELS INCLUDED</span>
+    <span><b>✦</b>OFFICIAL MANUAL SCHEDULES</span>
+    <span><b>✦</b>NO ACCOUNTS, NO TRACKING</span>
+    <span><b>✦</b>YOUR DATA STAYS ON YOUR PHONE</span>
+  </div>
+</div>
+
+<!-- ================= FEATURES ================= -->
+<section id="features">
+  <div class="wrap">
+    <p class="eyebrow reveal">Why pilots switch</p>
+    <h2 class="reveal">Everything your aircraft needs.<br>Nothing it doesn't.</h2>
+    <div class="feats">
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg></div>
+        <h3>Bulletin Alerts</h3>
+        <p>New AutoGyro service bulletins land in your notifications the day they publish.</p>
       </div>
-      <div class="tile t4">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.41A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg></div>
-        <h3>Wind Compass</h3><p>Preflight wind intelligence: live METAR, gusts, trend and density altitude.</p>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3 3.7-3.7z"/></svg></div>
+        <h3>Maintenance Tracking</h3>
+        <p>100-hour, annual and calendar tasks tracked against tach time — nothing slips.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg></div>
+        <h3>Google Earth Paths</h3>
+        <p>Export any flight as KML and relive it in Google Earth.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></div>
+        <h3>Wind Compass</h3>
+        <p>Preflight wind intelligence: live METAR, gusts, trend and density altitude.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="shots" id="screens">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kick">Inside the app</div>
-      <h2>One app for the whole aircraft</h2>
-      <p>From the preflight weather check to the 100-hour inspection, GyroCare Pro keeps your gyroplane, your logbook and your flights in one place.</p>
+<!-- ================= REEL ================= -->
+<section class="reel-sec" id="watch">
+  <div class="wrap reel-grid">
+    <div class="phone-stage reveal">
+      <div class="phone"><video src="assets/reel-launch.mp4" autoplay muted loop playsinline controls poster="assets/shot-flight.jpg"></video></div>
     </div>
-    <div class="shotgrid">
-      <div class="shot"><span class="lab">Flight Tracking</span><div class="ph"><img src="assets/shot-flight.jpg" alt="Flight tracking"></div><p>GPS flight recording with path, speed and altitude profile.</p></div>
-      <div class="shot"><span class="lab">Dashboard</span><div class="ph"><img src="assets/shot-dash.jpg" alt="Dashboard"></div><p>Tach hours, notifications and maintenance summary at a glance.</p></div>
-      <div class="shot"><span class="lab">Wind Compass</span><div class="ph"><img src="assets/shot-wind-mag2.jpg" alt="Wind compass"></div><p>Live wind, gusts and direction — built for the preflight walk-around.</p></div>
-      <div class="shot"><span class="lab">Logbook</span><div class="ph"><img src="assets/shot-logbook.jpg" alt="Logbook"></div><p>Hours timeline, per-year breakdown, CSV and PDF export.</p></div>
-    </div>
-    <div class="shotgrid shotgrid-3">
-      <div class="shot"><span class="lab">Maintenance</span><div class="ph"><img src="assets/shot-maint2.jpg" alt="Maintenance"></div><p>Every manual task, scheduled against your tachometer.</p></div>
-      <div class="shot"><span class="lab">History</span><div class="ph"><img src="assets/shot-history.jpg" alt="History"></div><p>Complete maintenance log — every task, date and tach hour, filterable by category.</p></div>
-      <div class="shot"><span class="lab">Preflight Weather</span><div class="ph"><img src="assets/shot-weather.jpg" alt="Preflight weather"></div><p>10-day wind forecast, density altitude and preflight checklist.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="tours" id="tours">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kick">Watch it in action</div>
-      <h2>See the app fly</h2>
-      <p>Two quick tours, recorded from the real app — maintenance tracking and flight tracking.</p>
-    </div>
-    <div class="tourgrid">
-      <div class="tour">
-        <div class="tframe"><video src="assets/tour-maintenance.mp4" muted autoplay loop playsinline preload="metadata"></video></div>
-        <p>Maintenance tour</p>
-      </div>
-      <div class="tour">
-        <div class="tframe"><video src="assets/tour-tracking.mp4" muted autoplay loop playsinline preload="metadata"></video></div>
-        <p>Flight tracking tour</p>
+    <div class="reveal">
+      <p class="eyebrow">The launch film</p>
+      <h2>See it in 16 seconds</h2>
+      <p class="lede">Real flying, real app. Shot over Lake Belton, Texas — the launch reel pilots are sharing in gyro groups right now.</p>
+      <ul class="reel-points">
+        <li><b>▸</b><span>Every AutoGyro model, engine and rotor combination built in</span></li>
+        <li><b>▸</b><span>Maintenance schedules straight from the official manuals</span></li>
+        <li><b>▸</b><span>Try the live demo in your browser — no download needed</span></li>
+      </ul>
+      <div class="cta-row" style="display:flex;gap:14px;flex-wrap:wrap">
+        <a class="btn-gold" href="app.html">Try the live demo</a>
+        <a class="btn" href="https://www.instagram.com/gyroguy2021/">Follow @gyroguy2021</a>
       </div>
     </div>
   </div>
 </section>
 
-<section class="details">
+<!-- ================= SCREENS ================= -->
+<section id="screens" style="padding-top:20px">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kick">Under the cowling</div>
-      <h2>Serious about maintenance</h2>
-      <p>GyroCare Pro is built around the official AutoGyro documentation — not generic checklists.</p>
-    </div>
-    <div class="dgrid">
-      <div class="d"><div class="n">1</div><div><h3>Every task from the manuals</h3><p>Complete maintenance schedules from the official AutoGyro manuals, for every model — matched to your exact aircraft and engine.</p></div></div>
-      <div class="d"><div class="n">2</div><div><h3>Service bulletins, automatically</h3><p>The app checks the AutoGyro website for new service bulletins and surfaces them under the affected tasks.</p></div></div>
-      <div class="d"><div class="n">3</div><div><h3>Deep-links to the manual</h3><p>Each task links to the exact manual section with the procedure details and pictures.</p></div></div>
-      <div class="d"><div class="n">4</div><div><h3>Tach-driven scheduling</h3><p>100-hour, annual and calendar items count down against your tachometer hours — with overdue and due-soon warnings.</p></div></div>
-      <div class="d"><div class="n">5</div><div><h3>Your data stays yours</h3><p>Everything lives on your device. No accounts, no cloud, no tracking. Export backups and PDFs whenever you like.</p></div></div>
-      <div class="d"><div class="n">6</div><div><h3>Fly, then relive it</h3><p>Track flights with GPS and export any of them to Google Earth (KML) straight from the logbook.</p></div></div>
+    <p class="eyebrow reveal">Inside the app</p>
+    <h2 class="reveal">One app for the whole aircraft</h2>
+    <p class="lede reveal">From the preflight weather check to the 100-hour inspection, GyroCare Pro keeps your gyroplane, your logbook and your flights in one place. Every screen, right here:</p>
+  </div>
+  <div class="wrap">
+    <div class="shots">
+      <div class="shot reveal"><div class="phone"><img src="assets/shot-flight.jpg" alt="Flight tracking"></div><h3>Flight Tracking</h3><p>GPS flight recording with path, speed and altitude profile.</p></div>
+      <div class="shot reveal"><div class="phone"><img src="assets/shot-dash.jpg" alt="Dashboard"></div><h3>Dashboard</h3><p>Tach hours, notifications and maintenance summary at a glance.</p></div>
+      <div class="shot reveal"><div class="phone"><img src="assets/shot-wind-mag2.jpg" alt="Wind compass"></div><h3>Wind Compass</h3><p>Live wind, gusts and direction — built for the preflight walk-around.</p></div>
+      <div class="shot reveal"><div class="phone"><img src="assets/shot-logbook.jpg" alt="Logbook"></div><h3>Logbook</h3><p>Hours timeline, per-year breakdown, CSV and PDF export.</p></div>
+      <div class="shot reveal"><div class="phone"><img src="assets/shot-maint2.jpg" alt="Maintenance"></div><h3>Maintenance</h3><p>Every manual task, scheduled against your tachometer.</p></div>
+      <div class="shot reveal"><div class="phone"><img src="assets/shot-history.jpg" alt="History"></div><h3>History</h3><p>Complete maintenance log — every task, date and tach hour, filterable by category.</p></div>
+      <div class="shot reveal"><div class="phone"><img src="assets/shot-weather.jpg" alt="Preflight weather"></div><h3>Preflight Weather</h3><p>10-day wind forecast, density altitude and preflight checklist.</p></div>
     </div>
   </div>
 </section>
 
-<section class="pricing" id="pricing">
+<!-- ================= UNDER THE COWLING ================= -->
+<section style="padding-top:10px">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kick">Pricing</div>
-      <h2>Try it free for a month</h2>
-      <p>Full access for 30 days — no payment, no paywall. Then pick the plan that fits how you fly.</p>
-    </div>
-    <div><span class="free">FIRST 30 DAYS FREE</span></div>
-    <div class="psub">Every feature unlocked. No credit card required.</div>
-    <div class="pcards">
-      <div class="pcard">
-        <div class="per">Monthly</div>
-        <div class="pr"><small>$</small>2.99<small>/mo</small></div>
-        <div class="sv">Flexible, cancel anytime</div>
-      </div>
-      <div class="pcard hot">
-        <div class="per">Yearly</div>
-        <div class="pr"><small>$</small>29.99<small>/yr</small></div>
-        <div class="sv">Save over monthly billing</div>
-      </div>
-    </div>
-    <p class="pnote">Subscriptions are handled securely through the App Store and apply per Apple ID.</p>
-  </div>
-</section>
-
-<section class="dl" id="download">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kick">Get the app</div>
-      <h2>Scan to download</h2>
-      <p>Free on iOS. Your first month is on us.</p>
-    </div>
-    <div class="qrrow">
-      <div class="qrcard"><img src="assets/qr.png" alt="QR code to the App Store"></div>
-      <div>
-        <a href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486"><img class="storebadge" src="assets/appstore-badge.svg" alt="Download on the App Store"></a>
-        <div class="hint">Point your iPhone camera at the code,<br>or tap the badge above.</div>
-      </div>
+    <p class="eyebrow reveal">Under the cowling</p>
+    <h2 class="reveal">Serious about maintenance</h2>
+    <p class="lede reveal">GyroCare Pro is built around the official AutoGyro documentation — not generic checklists.</p>
+    <div class="cowl">
+      <div class="card reveal"><div class="num">1</div><h3>Every task from the manuals</h3><p>Complete maintenance schedules from the official AutoGyro manuals, for every model — matched to your exact aircraft and engine.</p></div>
+      <div class="card reveal"><div class="num">2</div><h3>Service bulletins, automatically</h3><p>The app checks the AutoGyro website for new service bulletins and surfaces them under the affected tasks.</p></div>
+      <div class="card reveal"><div class="num">3</div><h3>Deep-links to the manual</h3><p>Each task links to the exact manual section with the procedure details and pictures.</p></div>
+      <div class="card reveal"><div class="num">4</div><h3>Tach-driven scheduling</h3><p>100-hour, annual and calendar items count down against your tachometer hours — with overdue and due-soon warnings.</p></div>
+      <div class="card reveal"><div class="num">5</div><h3>Your data stays yours</h3><p>Everything lives on your device. No accounts, no cloud, no tracking. Export backups and PDFs whenever you like.</p></div>
+      <div class="card reveal"><div class="num">6</div><h3>Fly, then relive it</h3><p>Track flights with GPS and export any of them to Google Earth (KML) straight from the logbook.</p></div>
     </div>
   </div>
 </section>
 
+<!-- ================= TOURS ================= -->
+<section style="padding-top:10px">
+  <div class="wrap">
+    <p class="eyebrow reveal">Watch it in action</p>
+    <h2 class="reveal">See the app fly</h2>
+    <p class="lede reveal">Two quick tours, recorded from the real app — maintenance tracking and flight tracking.</p>
+    <div class="vids">
+      <div class="vid reveal">
+        <video src="assets/tour-maintenance.mp4" poster="assets/shot-maint2.jpg" controls preload="none" playsinline></video>
+        <div class="cap"><h3>Maintenance tour</h3><p>Tasks, tach countdowns and bulletin alerts, end to end.</p></div>
+      </div>
+      <div class="vid reveal">
+        <video src="assets/tour-tracking.mp4" poster="assets/shot-flight.jpg" controls preload="none" playsinline></video>
+        <div class="cap"><h3>Flight tracking tour</h3><p>Record a flight, then open it in Google Earth.</p></div>
+      </div>
+    </div>
+    <p style="margin-top:26px" class="reveal"><a class="btn" href="#howto">All 13 how-to videos <span class="tri">↓</span></a></p>
+  </div>
+</section>
+
+<!-- ================= HOW-TO ================= -->
+<section class="howto-sec" id="howto">
+  <div class="wrap">
+    <p class="eyebrow reveal">How-to videos</p>
+    <h2 class="reveal">Learn every screen, in minutes</h2>
+    <p class="lede reveal">The complete 13-video series — recorded from the real app, with a tap marker on every touch so you can follow along on your own phone.</p>
+    <div class="howtos">
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-01-dashboard-tour.mp4" poster="assets/howto-poster-01.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">01</span>Dashboard Tour</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-02-find-due-task.mp4" poster="assets/howto-poster-02.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">02</span>Finding a Due Task</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-03-log-task-done.mp4" poster="assets/howto-poster-03.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">03</span>Logging a Completed Task</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-04-task-details.mp4" poster="assets/howto-poster-04.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">04</span>Task Details: How-To, Procedure &amp; Manual</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-05-custom-task.mp4" poster="assets/howto-poster-05.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">05</span>Adding a Custom Task</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-06-history-tour.mp4" poster="assets/howto-poster-06.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">06</span>History Tour</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-07-history-edit-delete.mp4" poster="assets/howto-poster-07.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">07</span>Editing &amp; Deleting History</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-08-weather-check-v3.mp4" poster="assets/howto-poster-08.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">08</span>Weather &amp; Flight Recording</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-09-aircraft-setup.mp4" poster="assets/howto-poster-09.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">09</span>Aircraft Setup</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-10-add-flight.mp4" poster="assets/howto-poster-10.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">10</span>Adding a Flight</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-11-flight-edit-delete.mp4" poster="assets/howto-poster-11.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">11</span>Editing &amp; Deleting a Flight</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-12-exports-v3.mp4" poster="assets/howto-poster-12.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">12</span>Exports &amp; Imports</h3></div>
+      <div class="htile reveal"><div class="hv"><video src="assets/howto-13-service-bulletins.mp4" poster="assets/howto-poster-13.jpg" controls preload="metadata" playsinline></video></div><h3><span class="n">13</span>Service Bulletins</h3></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STORY ================= -->
+<section class="story">
+  <div class="story-bg"></div>
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">The story</p>
+      <blockquote>"I couldn't find an app that treated my gyroplane like a real aircraft. <span>So I built one.</span>"</blockquote>
+      <p>GyroCare Pro was designed and built by a gyroplane pilot in Waco, Texas — and flown, tested and refined on his own AutoGyro, flight after flight.</p>
+      <p>Every schedule comes from the official AutoGyro manuals. Every feature exists because a pilot needed it on the ramp, not because it looked good in a boardroom.</p>
+      <p><b style="color:var(--gold)">Built by a pilot, for pilots.</b> That's not a slogan — it's the development process.</p>
+    </div>
+    <div class="earth reveal">
+      <img src="assets/earth-track.png" alt="A real GyroCare Pro flight track in Google Earth">
+      <div class="cap"><b>A real flight, exported.</b> Every flight you record can be opened in Google Earth as a full 3D track — straight from the logbook.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MANUAL ================= -->
+<section class="manual" style="padding-top:20px">
+  <div class="wrap">
+    <div class="cover reveal"><img src="assets/shot-manual-cover.jpg" alt="GyroCare Pro user manual cover"></div>
+    <div class="reveal">
+      <p class="eyebrow">Full documentation</p>
+      <h2>A 36-page manual,<br>written like the app works</h2>
+      <p class="lede">Every screen, every workflow, chapter by chapter — mirroring the 13 how-to videos. Keep it in the hangar or on your iPad.</p>
+      <p style="margin-top:26px"><a class="btn-gold" href="assets/GyroCare-Pro-User-Manual.pdf">Download the manual (PDF)</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section class="price-sec" id="pricing">
+  <div class="wrap">
+    <p class="eyebrow reveal" style="text-align:center">Pricing</p>
+    <h2 class="reveal" style="text-align:center">Try it free for a month</h2>
+    <p class="lede reveal" style="text-align:center;margin:0 auto">Full access for 30 days — no payment, no paywall. Then pick the plan that fits how you fly.</p>
+    <div class="price-grid">
+      <div class="plan hot reveal">
+        <span class="tag">Start here</span>
+        <h3>First 30 days</h3>
+        <div class="amt">FREE</div>
+        <p>Every feature unlocked from your first launch. No credit card required.</p>
+        <ul><li>Full maintenance schedules</li><li>GPS flight tracking &amp; logbook</li><li>Bulletin alerts &amp; weather</li></ul>
+      </div>
+      <div class="plan reveal">
+        <span class="tag">Flexible</span>
+        <h3>Monthly</h3>
+        <div class="amt">$2.99<small>/mo</small></div>
+        <p>Full access, billed monthly. Cancel anytime in the App Store.</p>
+        <ul><li>Everything in the free month</li><li>All future updates included</li></ul>
+      </div>
+      <div class="plan reveal">
+        <span class="tag">Best value</span>
+        <h3>Yearly</h3>
+        <div class="amt">$29.99<small>/yr</small></div>
+        <p>One payment a year — less than monthly billing over 12 months.</p>
+        <ul><li>Everything in the free month</li><li>All future updates included</li></ul>
+      </div>
+    </div>
+    <p class="price-note reveal">Subscriptions are handled securely through the App Store and apply per Apple ID.</p>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq">
+  <div class="wrap">
+    <p class="eyebrow reveal">Questions</p>
+    <h2 class="reveal">Before you ask</h2>
+    <div class="faq">
+      <div class="q reveal"><h3>Which aircraft does it support?</h3><p>All AutoGyro models are included, with each model's own maintenance schedule matched to your exact engine and rotor combination.</p></div>
+      <div class="q reveal"><h3>Where does my data live?</h3><p>On your iPhone — only. No accounts, no cloud, no tracking. You can export backups, CSVs and PDFs whenever you like.</p></div>
+      <div class="q reveal"><h3>How does the free month work?</h3><p>Download the app and you get 30 days of full access from first launch — no credit card, no trial to cancel. After that, subscribe monthly or yearly to keep going.</p></div>
+      <div class="q reveal"><h3>Does it work without signal at the airfield?</h3><p>Yes. Your schedules, logbook and history live on the device. Weather and bulletin checks update whenever you have a connection.</p></div>
+      <div class="q reveal"><h3>Is there an Android version?</h3><p>GyroCare Pro is iPhone-only for now. An Android version will follow if enough pilots ask for one — tell us at support if that's you.</p></div>
+      <div class="q reveal"><h3>Who do I contact for help?</h3><p>Email <a href="mailto:ahmarautogyro@gmail.com" style="color:var(--gold2)">ahmarautogyro@gmail.com</a> — you'll hear back from the pilot who built it.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DOWNLOAD ================= -->
+<section class="download" id="download" style="padding-top:10px">
+  <div class="wrap">
+    <p class="eyebrow reveal">Get the app</p>
+    <h2 class="reveal">Scan to download</h2>
+    <p class="lede reveal" style="margin:0 auto">Free on iOS. Your first month is on us.</p>
+    <div class="dl-card reveal">
+      <div class="qr"><img src="assets/qr.png" alt="QR code to the App Store"></div>
+      <a class="badge" href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486"><img src="assets/appstore-badge.svg" alt="Download on the App Store"></a>
+      <p>Point your iPhone camera at the code, or tap the badge.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
 <footer>
   <div class="wrap">
-    <div>© 2026 Ahmar Shaikh · Waco, TX · Built by a pilot, for pilots.</div>
-    <div class="fl">
-      <a href="app.html">Web demo</a>
-      <a href="https://www.instagram.com/gyroguy2021/">Instagram</a>
-      <a href="support.html">Support</a>
-      <a href="privacy-policy.html">Privacy Policy</a>
+    <div class="foot">
+      <div>
+        <a class="brand" href="#top"><span class="mark"><img src="assets/logo.png" alt="GyroCare Pro logo"></span>GyroCare&nbsp;<em>Pro</em></a>
+        <p>The maintenance, logbook and flight companion for AutoGyro pilots. Built by a pilot, for pilots.</p>
+      </div>
+      <div>
+        <h4>App</h4>
+        <ul>
+          <li><a href="app.html">Live demo</a></li>
+          <li><a href="how-to.html">How-to videos</a></li>
+          <li><a href="assets/GyroCare-Pro-User-Manual.pdf">User manual (PDF)</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul>
+          <li><a href="support.html">Support page</a></li>
+          <li><a href="mailto:ahmarautogyro@gmail.com">ahmarautogyro@gmail.com</a></li>
+          <li><a href="privacy-policy.html">Privacy policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Follow</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/gyroguy2021/">Instagram — @gyroguy2021</a></li>
+          <li><a href="https://www.youtube.com/@gyroguy786">YouTube — @gyroguy786</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="copyright">
+      <span>© 2026 GyroCare Pro · Waco, Texas</span>
+      <span>Not affiliated with AutoGyro GmbH. AutoGyro is a trademark of its owner.</span>
     </div>
   </div>
 </footer>
 
+<script>
+const hdr=document.getElementById('hdr');
+addEventListener('scroll',()=>{hdr.classList.toggle('scrolled',scrollY>30)},{passive:true});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
 </body>
 </html>
