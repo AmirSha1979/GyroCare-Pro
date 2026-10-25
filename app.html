@@ -6157,7 +6157,6 @@ function renderHistoryList(){
               const tagElH=el.querySelector('.history-name .tag'); if(tagElH) tagElH.style.display='';
               // restore all siblings
               feed.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(s=>{ s.style.opacity=''; s.style.pointerEvents=''; });
-              _gcLiftJumpSpotlight(el);
             } else {
               el.dataset.expanded='1';
               el.style.transform='translateX(0)';
@@ -6240,7 +6239,6 @@ function renderHistoryList(){
 
     // Header click — toggle group
     header.addEventListener('click', () => {
-      _gcJumpSpotId = null; // ADDED [v1.1] — a manual header tap ends any jump spotlight tracking
       const nowOpen = !_histDisplayedOpen;
       _histDisplayedOpen = nowOpen;
       _histGroupStates[groupKey] = nowOpen;
@@ -6477,7 +6475,6 @@ function renderHistoryList(){
               if(dotEl){ dotEl.style.transform=''; dotEl.style.boxShadow=''; }
               if(wrapEl){ wrapEl.classList.remove('open'); }
               const tagElH=el.querySelector('.history-name .tag'); if(tagElH) tagElH.style.display='';
-              _gcLiftJumpSpotlight(el);
             } else {
               el.dataset.expanded='1';
               el.style.transform='translateX(0)';
@@ -6674,7 +6671,6 @@ function renderHistoryList(){
             if(dotEl){dotEl.style.transform='';dotEl.style.boxShadow='';}
             if(rightEl){rightEl.style.color='';}
             if(wrapEl){wrapEl.classList.remove('open');}
-            _gcLiftJumpSpotlight(el);
           } else {
             el.dataset.expanded='1';
             el.style.transform='translateX(0)';
@@ -7139,7 +7135,6 @@ function jumpToHistoryEntry(taskId){
             s.style.opacity = '0.08';
             s.style.pointerEvents = 'none';
           });
-          _gcJumpSpotId = targetId;
         }
         // Clear inline transitions afterwards so nothing is left frozen
         // (same discipline as jumpToMntTask — avoids the stuck-transition bug).
@@ -14628,30 +14623,20 @@ function fmtSunTime(d){
 const _TAB_ORDER = ['dashboard','schedule','history','pilot','aircraft','logbook','settings'];
 let activeTab = 'dashboard';
 var _tabScrollPos = {}; // stores scroll position per tab
-// ADDED [v1.1] — MNT-jump spotlight tracking. jumpToHistoryEntry()
-// records its target here; when that entry is collapsed again (direct
-// tap, or the outside-tap step-back, which routes through the item's
-// own click), _gcLiftJumpSpotlight() lifts the jump fade in the same
-// gesture — the grouped collapse paths otherwise leave the whole feed
-// dimmed with nothing selected. Manual browsing never sets this, so
-// it is unaffected. Tab exit (below) and any manual group-header tap
-// clear it.
-var _gcJumpSpotId = null;
-function _gcLiftJumpSpotlight(itemEl){
-  if(!_gcJumpSpotId || !itemEl || itemEl.dataset.id !== _gcJumpSpotId) return;
-  _gcJumpSpotId = null;
-  document.querySelectorAll('#historyFeed .history-swipe-wrap, #historyFeed [data-hist-header]').forEach(function(s){
-    s.style.opacity = '';
-    s.style.pointerEvents = '';
-  });
-}
+// NOTE [v1.1, Amir, Oct 25 PM] — the MNT jump has NO special collapse
+// behavior: it uses the exact manual History paths end to end. An
+// earlier same-day build lifted the jump's fade when the jumped entry
+// was collapsed (a "step-back lift"); Amir reversed it after seeing it
+// live — un-expanding a manually expanded entry leaves the other
+// groups dimmed, and the jump must do the same. The fade clears the
+// manual ways only: expanding another entry, closing the group, or
+// leaving the tab (_gcCloseExpandedHistoryEntry below).
 // ADDED [session 15] — force-closes any expanded History entry, used only
 // when leaving the History tab (see switchTab above). Mirrors the exact
 // reset steps History's own "collapse siblings" logic already uses when
 // expanding a different entry — same visual result, just triggered by
 // leaving the tab instead of tapping a row.
 function _gcCloseExpandedHistoryEntry(){
-  _gcJumpSpotId = null; // ADDED [v1.1] — leaving History ends any jump spotlight
   document.querySelectorAll('.history-item[data-expanded="1"]').forEach(function(z){
     z.dataset.expanded='0';
     z.style.transform='translateX(0)';
