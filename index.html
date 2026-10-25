@@ -140,10 +140,14 @@ header.scrolled{background:rgba(7,13,26,.88);backdrop-filter:blur(14px);box-shad
 /* ---------- videos ---------- */
 .vids{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:44px}
 .vid{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);overflow:hidden}
-.vid video{width:100%;aspect-ratio:16/9;object-fit:cover;background:#000}
+.vid video{display:block;width:min(100%,340px);aspect-ratio:440/956;object-fit:contain;margin:0 auto;background:#000}
 .vid .cap{padding:18px 22px}
 .vid h3{font-size:1.1rem}
 .vid p{color:var(--mut);font-size:.95rem;margin-top:4px}
+/* Enlarged view: show the WHOLE phone screen — contain fits it inside
+   with side bars instead of slicing off the top and bottom. */
+video:fullscreen{object-fit:contain!important;background:#000}
+video:-webkit-full-screen{object-fit:contain!important;background:#000}
 @media(max-width:760px){.vids{grid-template-columns:1fr}}
 
 /* ---------- story ---------- */
