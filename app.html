@@ -1754,6 +1754,7 @@ body.light-mode .profile-chip-label{color:#4a5568;}
           </div>
         </div>
         <div id="miniNoHwMsg" style="display:none;font-size:10px;color:rgba(255,255,255,.4);text-align:center;padding:4px 8px;">Compass unavailable</div>
+        <div id="miniAccNote" style="display:none;font-size:10px;color:#FFA500;text-align:center;padding:2px 8px;">Compass unreliable</div>
         <div id="miniCompassWrap" style="position:relative;width:110px;height:110px;">
           <!-- Ring SVG -->
           <svg id="miniRing" viewBox="0 0 360 360" style="position:absolute;inset:0;width:100%;height:100%;transform-origin:center;"></svg>
@@ -2418,6 +2419,8 @@ body.light-mode .profile-chip-label{color:#4a5568;}
     <div class="wf-coords" id="wfCoords" style="display:flex;align-items:center;gap:5px;">
       <span id="wfGpsDot" style="width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block;flex-shrink:0;transition:background .4s;"></span>
       <span id="wfCoordsText">Locating<span class="ldots"></span></span>
+      <span id="wfSrcTag" style="display:none;font-size:9px;font-weight:800;letter-spacing:.08em;color:#000;background:var(--gold);border-radius:6px;padding:2px 6px;flex-shrink:0;">GPS</span>
+      <span id="wfAccNote" style="display:none;font-size:9px;font-weight:700;letter-spacing:.06em;color:#FFA500;flex-shrink:0;">&#9888; COMPASS UNRELIABLE</span>
     </div>
     <div id="wfManualTag" onclick="wfResetToGps()" style="display:none;margin-top:6px;font-size:11px;color:#000;font-weight:800;letter-spacing:.06em;background:var(--gold);border-radius:8px;padding:4px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent;">↺ USE MY GPS</div>
   </div>
@@ -11991,6 +11994,11 @@ var _miniRawHdg = null;
 var _miniSmoothHdg = 0;
 var _miniRafId = null;
 var _miniWatcher = null;
+// [compass assist] Mini-compass accuracy/stall state (see _startMiniCompass
+// and _miniRafLoop). The mini gets the reliability note + auto-snap only —
+// no GPS source: it has no GPS watch of its own and none is added (h §4.7).
+var _miniAccState = 'ok', _miniAccBadSince = 0, _miniAccGoodSince = 0;
+var _miniLastEvtTs = 0, _miniSnapReq = false, _miniLastFrameTs = 0, _miniNoteShown = null;
 var _miniHwTimer = null;
 var _miniHwReceived = false;
 
@@ -12041,10 +12049,26 @@ function drawMiniRing(){
   });
 }
 
-function _miniRafLoop(){
+function _miniRafLoop(ts){
   _miniRafId = requestAnimationFrame(_miniRafLoop);
   if(_miniRawHdg===null) return;
-  _miniSmoothHdg = _miniSmoothHdg + 0.08*(_miniRawHdg - _miniSmoothHdg);
+  // [compass assist] dt-corrected smoothing: identical to the legacy
+  // 0.08/frame at 60fps, same wall-clock catch-up at any other frame
+  // rate. A missing/zero timestamp falls back to exactly one nominal
+  // frame — the legacy behaviour.
+  var _mdt = (typeof ts==='number' && _miniLastFrameTs) ? (ts - _miniLastFrameTs) : 16.667;
+  if(!(_mdt>0)) _mdt = 16.667;
+  if(_mdt>50) _mdt = 50;
+  _miniLastFrameTs = (typeof ts==='number') ? ts : 0;
+  var _mAlpha = 1 - Math.pow(1-0.08, _mdt/16.667);
+  // [compass assist] Auto-snap after a sensor stall — what the big
+  // compass's reset button does, without needing a tap.
+  if(_miniSnapReq){
+    _miniSmoothHdg = _miniRawHdg;
+    _miniSnapReq = false;
+  } else {
+    _miniSmoothHdg = _miniSmoothHdg + _mAlpha*(_miniRawHdg - _miniSmoothHdg);
+  }
   _miniSmoothHdg = ((_miniSmoothHdg%360)+360)%360;
   _miniHdg = _miniSmoothHdg;
   var ring=document.getElementById('miniRing');
@@ -12063,6 +12087,13 @@ function _miniRafLoop(){
   // Counter-rotate windArrow so it always points at true wind direction
   var arrow=document.getElementById('windArrow');
   if(arrow) arrow.style.transform='rotate('+(_wfData.dir+180)+'deg)';
+  // [compass assist] Reliability note — toggled only when the state
+  // changes, never per frame (renderer-weight discipline, sessions 21-30).
+  if(_miniAccState!==_miniNoteShown){
+    _miniNoteShown = _miniAccState;
+    var _mnEl=document.getElementById('miniAccNote');
+    if(_mnEl) _mnEl.style.display = (_miniAccState==='bad') ? 'block' : 'none';
+  }
 }
 
 /* ── TEMPORARY DIAGNOSTICS [session 21] ─────────────────────────────────
@@ -12852,6 +12883,27 @@ function _startMiniCompass(){
     _gcNoteCompassAcc(e); // [session 28] read-only sampling; no-ops when Diagnostics is off
     var raw = e.webkitCompassHeading??((e.alpha!=null)?(360-e.alpha)%360:null);
     if(raw==null) return;
+    // [compass assist] Accuracy bookkeeping + stall detection — pure
+    // arithmetic on the event's own values (this hook is among the
+    // highest-frequency in the app; nothing allocates, nothing touches
+    // the DOM). Missing accuracy (non-iOS) is neutral: neither good nor
+    // bad. Thresholds match the big compass: bad = negative or >25 deg,
+    // ~1s of bad to engage, ~2.5s of good to clear.
+    var _mNow = Date.now();
+    if(_miniLastEvtTs && (_mNow - _miniLastEvtTs) > 1500) _miniSnapReq = true;
+    _miniLastEvtTs = _mNow;
+    var _mAcc = e.webkitCompassAccuracy;
+    if(typeof _mAcc==='number'){
+      if(_mAcc < 0 || _mAcc > 25){
+        if(!_miniAccBadSince) _miniAccBadSince = _mNow;
+        _miniAccGoodSince = 0;
+        if(_miniAccState==='ok' && (_mNow - _miniAccBadSince) >= 1000) _miniAccState = 'bad';
+      } else {
+        if(!_miniAccGoodSince) _miniAccGoodSince = _mNow;
+        _miniAccBadSince = 0;
+        if(_miniAccState==='bad' && (_mNow - _miniAccGoodSince) >= 2500) _miniAccState = 'ok';
+      }
+    }
     if(!_miniHwReceived){
       _miniHwReceived=true;
       if(_miniHwTimer){ clearTimeout(_miniHwTimer); _miniHwTimer=null; }
@@ -13178,6 +13230,19 @@ function startWFGps(){
       localStorage.setItem('gc_lastLat', _wfLat);
       localStorage.setItem('gc_lastLon', _wfLon);
       _setGpsCoordText(_wfLat, _wfLon);
+      // [compass assist] Publish GPS course/speed for the heading-source
+      // logic in _attachWFCompass. Both fields already arrive on every
+      // fix and were previously discarded. Window props = the house
+      // pattern for cross-closure state (cf. _wfWobbleOffset). Inside
+      // the manual-mode gate on purpose: in a pinned-city planning view
+      // a course from the pilot's real position must never drive the
+      // compass. Invalid/absent course (e.g. stationary) clears state.
+      var _crs = pos.coords.heading, _spd = pos.coords.speed;
+      if(typeof _crs==='number' && _crs>=0 && typeof _spd==='number' && _spd>=0){
+        window._gcGpsCourse=_crs; window._gcGpsSpeed=_spd; window._gcGpsTs=Date.now();
+      } else {
+        window._gcGpsCourse=null; window._gcGpsSpeed=null; window._gcGpsTs=0;
+      }
     }
     _setGpsDot(_wfManualMode ? 'manual' : 'locked');
     if(!firstFixDone){
@@ -13349,12 +13414,50 @@ function _attachWFCompass(){
   // has actually arrived (_rawHdg!==null), so tapping reset before the
   // sensor has ever reported anything is a safe no-op, not a snap to 0.
   var _resetRequested = false;
+  // [compass assist] Heading-source state. The magnetometer stays the
+  // primary source; GPS course (published onto window._gcGpsCourse /
+  // _gcGpsSpeed / _gcGpsTs by startWFGps's _onPos) substitutes only
+  // while Apple's own accuracy estimate says the compass reading
+  // cannot be trusted AND the aircraft is moving fast enough for a
+  // GPS course to mean anything. This is NOT calibration — nothing
+  // touches the magnetometer (h §1.4 stays binding); the display
+  // routes around a bad reading and hands back the moment it is
+  // trustworthy again. Thresholds, all in one place:
+  var ACC_BAD_DEG = 25;     // accuracy worse than this = untrusted
+  var ACC_BAD_MS = 1000;    // bad must hold this long to engage GPS
+  var ACC_GOOD_MS = 2500;   // good must hold this long to hand back
+  var GPS_ON_MPS = 4.12;    // ~8 kt — GPS engages above this speed
+  var GPS_OFF_MPS = 2.57;   // ~5 kt — releases below it (hysteresis)
+  var STALL_MS = 1500;      // sensor-event gap that counts as a stall
+  var GPS_FRESH_MS = 3000;  // ignore GPS fixes older than this
+  var _accState = 'ok', _accBadSince = 0, _accGoodSince = 0;
+  var _srcMode = 'mag', _gpsTarget = null;
+  var _lastEvtTs = 0, _lastFrameTs = 0, _tagShown = null;
   _wfHdgWatcher = function(e){
     _gcNoteCompassAcc(e); // [session 28] read-only sampling; no-ops when Diagnostics is off
     var raw = e.webkitCompassHeading ?? ((e.alpha!=null)?(360-e.alpha)%360:null);
     if(raw==null) return;
     // Real heading received — cancel no-hardware timer
     if(window._wfHwTimer){ clearTimeout(window._wfHwTimer); window._wfHwTimer=null; }
+    // [compass assist] Accuracy bookkeeping + stall detection — pure
+    // arithmetic on the event's own values; missing accuracy
+    // (non-iOS) is neutral. A stall (event gap > STALL_MS, e.g. the
+    // screen was locked) arms the same snap the reset button uses.
+    var _now = Date.now();
+    if(_lastEvtTs && (_now - _lastEvtTs) > STALL_MS) _resetRequested = true;
+    _lastEvtTs = _now;
+    var _acc = e.webkitCompassAccuracy;
+    if(typeof _acc==='number'){
+      if(_acc < 0 || _acc > ACC_BAD_DEG){
+        if(!_accBadSince) _accBadSince = _now;
+        _accGoodSince = 0;
+        if(_accState==='ok' && (_now - _accBadSince) >= ACC_BAD_MS) _accState = 'bad';
+      } else {
+        if(!_accGoodSince) _accGoodSince = _now;
+        _accBadSince = 0;
+        if(_accState==='bad' && (_now - _accGoodSince) >= ACC_GOOD_MS) _accState = 'ok';
+      }
+    }
     if(_smoothHdg===null){ _smoothHdg=raw; }
     var diff = raw - _smoothHdg;
     if(diff>180) diff-=360;
@@ -13362,17 +13465,54 @@ function _attachWFCompass(){
     _rawHdg = _smoothHdg + diff; window._wfRawHdgReceived=true;
   };
   window.addEventListener('deviceorientation', _wfHdgWatcher, true);
-  function _rafLoop(){
+  function _rafLoop(ts){
     _rafId = requestAnimationFrame(_rafLoop);
     var _wo = window._wfWobbleOffset||0;
     var ring = document.getElementById('wfRing');
     if(_rawHdg===null){ return; }
+    // [compass assist] dt-corrected smoothing factor: identical to the
+    // legacy per-frame ALPHA at 60fps, same wall-clock catch-up at any
+    // other frame rate. A missing/zero timestamp falls back to exactly
+    // one nominal frame — the legacy behaviour.
+    var _dt = (typeof ts==='number' && _lastFrameTs) ? (ts - _lastFrameTs) : 16.667;
+    if(!(_dt>0)) _dt = 16.667;
+    if(_dt>50) _dt = 50;
+    _lastFrameTs = (typeof ts==='number') ? ts : 0;
+    var _alpha = 1 - Math.pow(1-ALPHA, _dt/16.667);
+    // [compass assist] Pick this frame's heading source. GPS needs:
+    // sustained-bad accuracy, a fresh fix, real ground speed, and
+    // manual city mode OFF (a pinned city is a planning view — a
+    // course from where the pilot actually sits would be nonsense
+    // there). Hysteresis: engage above GPS_ON_MPS, release below
+    // GPS_OFF_MPS, so the source never flaps at the boundary.
+    var _gpsFresh = (typeof window._gcGpsCourse==='number') && (window._gcGpsCourse>=0)
+      && (typeof window._gcGpsSpeed==='number')
+      && ((Date.now() - (window._gcGpsTs||0)) < GPS_FRESH_MS)
+      && !window._wfManualMode;
+    var _wantGps = (_accState==='bad') && _gpsFresh
+      && ((_srcMode==='gps') ? (window._gcGpsSpeed > GPS_OFF_MPS) : (window._gcGpsSpeed > GPS_ON_MPS));
+    var _newMode = _wantGps ? 'gps' : 'mag';
+    if(_newMode!==_srcMode){
+      _srcMode = _newMode;
+      _resetRequested = true; // snap to the new source — no slow crawl across
+    }
+    var _target = _rawHdg;
+    if(_srcMode==='gps'){
+      var _gd = window._gcGpsCourse - _smoothHdg;
+      if(_gd>180) _gd-=360;
+      if(_gd<-180) _gd+=360;
+      _gpsTarget = _smoothHdg + _gd;
+      _target = _gpsTarget;
+    }
     // [session 32] Handle a pending reset BEFORE the wobble-trigger check
     // below, so a reset tapped mid-wobble doesn't fight the wobble's own
     // transform writes — it just snaps the smoothing baseline; the wobble
     // (if still running) continues exactly as it already was.
+    // [compass assist] The snap target is the ACTIVE source's heading
+    // (_target): a manual reset while GPS drives snaps to GPS, and
+    // every source hand-over snaps instead of crawling.
     if(_resetRequested){
-      _smoothHdg = _rawHdg;
+      _smoothHdg = _target;
       _resetRequested = false;
     }
     // Trigger wobble on first valid heading frame
@@ -13402,9 +13542,21 @@ function _attachWFCompass(){
       }
       _nextStep();
     }
-    _smoothHdg = _smoothHdg + ALPHA*(_rawHdg - _smoothHdg);
+    _smoothHdg = _smoothHdg + _alpha*(_target - _smoothHdg);
     _smoothHdg = ((_smoothHdg%360)+360)%360;
     _wfHdg = _smoothHdg;
+    // [compass assist] Source indicators — written ONLY when the state
+    // changes, never per frame (renderer-weight discipline, sessions
+    // 21-30). GPS tag while GPS drives; unreliable note while the
+    // compass is untrusted and GPS cannot take over.
+    var _tagState = (_srcMode==='gps') ? 'gps' : ((_accState==='bad') ? 'bad' : 'ok');
+    if(_tagState!==_tagShown){
+      _tagShown = _tagState;
+      var _tagEl = document.getElementById('wfSrcTag');
+      if(_tagEl) _tagEl.style.display = (_tagState==='gps') ? '' : 'none';
+      var _accEl = document.getElementById('wfAccNote');
+      if(_accEl) _accEl.style.display = (_tagState==='bad') ? '' : 'none';
+    }
     if(ring && window._wfWobbleDone!==false) ring.style.transform='rotate('+(-_smoothHdg+_wo)+'deg)';
     ['S','N','E','W','NE','SE','SW','NW','Deg30','Deg60','Deg120','Deg150','Deg210','Deg240','Deg300','Deg330'].forEach(function(lbl){
       var t=document.getElementById('wfLbl'+lbl);
