@@ -6168,8 +6168,12 @@ function renderHistoryList(){
               if(dotEl){ dotEl.style.transform='scale(1.5)'; dotEl.style.boxShadow='0 0 12px rgba(232,168,56,.9)'; }
               if(wrapEl){ wrapEl.classList.add('open'); }
               const tagElHE=el.querySelector('.history-name .tag'); if(tagElHE) tagElHE.style.display='none';
-              // fade all other feed children
-              feed.querySelectorAll('.history-swipe-wrap').forEach(s=>{
+              // fade all other feed children — REVISED [v1.1]: headers
+              // included, matching the jump and group-open fades. A
+              // wraps-only selector left group headers at full
+              // brightness, so expanding a single-entry task in a
+              // group-dominated feed looked like nothing faded.
+              feed.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(s=>{
                 if(!s.contains(el)){ s.style.opacity='0.08'; s.style.pointerEvents='none'; }
               });
               setTimeout(()=>{ el.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 50);
