@@ -6157,6 +6157,7 @@ function renderHistoryList(){
               const tagElH=el.querySelector('.history-name .tag'); if(tagElH) tagElH.style.display='';
               // restore all siblings
               feed.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(s=>{ s.style.opacity=''; s.style.pointerEvents=''; });
+              _gcLiftJumpSpotlight(el);
             } else {
               el.dataset.expanded='1';
               el.style.transform='translateX(0)';
@@ -6207,7 +6208,7 @@ function renderHistoryList(){
 
     // ── Group header ─────────────────────────────────────────────
     const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px 12px 0 0;background:var(--panel2);border:1px solid var(--line);border-bottom:none;cursor:pointer;transition:border-color .3s,background .3s,box-shadow .3s,opacity .3s;';
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px 12px 0 0;background:var(--panel2);border:1px solid var(--line);border-bottom:none;cursor:pointer;transition:border-color .3s,background .3s,box-shadow .3s,opacity .7s ease;';
     const grpLabel = (groupKey === 'other') ? 'Misc' : (first.taskName||'Unknown');
     header.innerHTML =
       '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">' +
@@ -6239,6 +6240,7 @@ function renderHistoryList(){
 
     // Header click — toggle group
     header.addEventListener('click', () => {
+      _gcJumpSpotId = null; // ADDED [v1.1] — a manual header tap ends any jump spotlight tracking
       const nowOpen = !_histDisplayedOpen;
       _histDisplayedOpen = nowOpen;
       _histGroupStates[groupKey] = nowOpen;
@@ -6257,7 +6259,7 @@ function renderHistoryList(){
         const fullH = childWrap.scrollHeight;
         childWrap.style.maxHeight = '0';
         childWrap.getBoundingClientRect();
-        childWrap.style.transition = 'max-height .45s cubic-bezier(0.32,0.72,0,1), opacity .3s ease';
+        childWrap.style.transition = 'max-height .45s cubic-bezier(0.32,0.72,0,1), opacity .7s ease';
         childWrap.style.maxHeight = fullH + 'px';
         childWrap.style.opacity = '1';
         setTimeout(()=>{
@@ -6276,7 +6278,7 @@ function renderHistoryList(){
         const curH = childWrap.scrollHeight;
         childWrap.style.maxHeight = curH + 'px';
         childWrap.getBoundingClientRect();
-        childWrap.style.transition = 'max-height .38s cubic-bezier(0.32,0.72,0,1), opacity .26s ease';
+        childWrap.style.transition = 'max-height .38s cubic-bezier(0.32,0.72,0,1), opacity .7s ease';
         childWrap.style.maxHeight = '0';
         childWrap.style.opacity = '0';
         if(arrow) arrow.textContent = '▼';
@@ -6475,6 +6477,7 @@ function renderHistoryList(){
               if(dotEl){ dotEl.style.transform=''; dotEl.style.boxShadow=''; }
               if(wrapEl){ wrapEl.classList.remove('open'); }
               const tagElH=el.querySelector('.history-name .tag'); if(tagElH) tagElH.style.display='';
+              _gcLiftJumpSpotlight(el);
             } else {
               el.dataset.expanded='1';
               el.style.transform='translateX(0)';
@@ -6508,7 +6511,7 @@ function renderHistoryList(){
     const hiddenWrap = document.createElement('div');
     const hiddenInner = document.createElement('div');
     hiddenInner.style.cssText = 'min-height:0;display:flex;flex-direction:column;overflow:hidden;';
-    hiddenWrap.style.cssText = 'display:grid;grid-template-rows:0fr;overflow:hidden;opacity:0;transition:grid-template-rows .45s cubic-bezier(0.32,0.72,0,1),opacity .3s ease;will-change:grid-template-rows,opacity;';
+    hiddenWrap.style.cssText = 'display:grid;grid-template-rows:0fr;overflow:hidden;opacity:0;transition:grid-template-rows .45s cubic-bezier(0.32,0.72,0,1),opacity .7s ease;will-change:grid-template-rows,opacity;';
     function _renderHiddenBatch(){
     if(hiddenRendered) return;
     hiddenRendered = true;
@@ -6671,6 +6674,7 @@ function renderHistoryList(){
             if(dotEl){dotEl.style.transform='';dotEl.style.boxShadow='';}
             if(rightEl){rightEl.style.color='';}
             if(wrapEl){wrapEl.classList.remove('open');}
+            _gcLiftJumpSpotlight(el);
           } else {
             el.dataset.expanded='1';
             el.style.transform='translateX(0)';
@@ -6721,7 +6725,7 @@ function renderHistoryList(){
           _histLastSnapshot = null; // CACHE INVALIDATION [session 22] — see note above
           showMore.style.display = 'none';
           hiddenWrap.style.maxHeight = 'none';
-          hiddenWrap.style.transition = 'grid-template-rows .45s cubic-bezier(0.32,0.72,0,1),opacity .3s ease';
+          hiddenWrap.style.transition = 'grid-template-rows .45s cubic-bezier(0.32,0.72,0,1),opacity .7s ease';
           hiddenWrap.getBoundingClientRect();
           hiddenWrap.style.gridTemplateRows = '1fr';
           hiddenWrap.style.opacity = '1';
@@ -7132,6 +7136,7 @@ function jumpToHistoryEntry(taskId){
             s.style.opacity = '0.08';
             s.style.pointerEvents = 'none';
           });
+          _gcJumpSpotId = targetId;
         }
         // Clear inline transitions afterwards so nothing is left frozen
         // (same discipline as jumpToMntTask — avoids the stuck-transition bug).
@@ -14620,12 +14625,30 @@ function fmtSunTime(d){
 const _TAB_ORDER = ['dashboard','schedule','history','pilot','aircraft','logbook','settings'];
 let activeTab = 'dashboard';
 var _tabScrollPos = {}; // stores scroll position per tab
+// ADDED [v1.1] — MNT-jump spotlight tracking. jumpToHistoryEntry()
+// records its target here; when that entry is collapsed again (direct
+// tap, or the outside-tap step-back, which routes through the item's
+// own click), _gcLiftJumpSpotlight() lifts the jump fade in the same
+// gesture — the grouped collapse paths otherwise leave the whole feed
+// dimmed with nothing selected. Manual browsing never sets this, so
+// it is unaffected. Tab exit (below) and any manual group-header tap
+// clear it.
+var _gcJumpSpotId = null;
+function _gcLiftJumpSpotlight(itemEl){
+  if(!_gcJumpSpotId || !itemEl || itemEl.dataset.id !== _gcJumpSpotId) return;
+  _gcJumpSpotId = null;
+  document.querySelectorAll('#historyFeed .history-swipe-wrap, #historyFeed [data-hist-header]').forEach(function(s){
+    s.style.opacity = '';
+    s.style.pointerEvents = '';
+  });
+}
 // ADDED [session 15] — force-closes any expanded History entry, used only
 // when leaving the History tab (see switchTab above). Mirrors the exact
 // reset steps History's own "collapse siblings" logic already uses when
 // expanding a different entry — same visual result, just triggered by
 // leaving the tab instead of tapping a row.
 function _gcCloseExpandedHistoryEntry(){
+  _gcJumpSpotId = null; // ADDED [v1.1] — leaving History ends any jump spotlight
   document.querySelectorAll('.history-item[data-expanded="1"]').forEach(function(z){
     z.dataset.expanded='0';
     z.style.transform='translateX(0)';
