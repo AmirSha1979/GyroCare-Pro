@@ -1188,8 +1188,8 @@ body.light-mode .hist-frosted-header{
 .lb-path-btn:active{background:rgba(232,168,56,.22);}
 .hist-btn:hover{border-color:var(--gold);color:var(--gold);}
 .history-empty{padding:20px;text-align:center;color:var(--muted);font-size:12px;}
-.history-swipe-wrap{position:relative;transition:opacity .3s ease;overflow:hidden;border-radius:12px;}
-[data-hist-header]{transition:opacity .3s ease;}
+.history-swipe-wrap{position:relative;transition:opacity .7s ease;overflow:hidden;border-radius:12px;}
+[data-hist-header]{transition:opacity .7s ease;}
 .hist-child-inner .history-swipe-wrap{border-radius:0;border-bottom:0.5px solid var(--line);}
 .hist-child-inner .history-swipe-wrap:last-child{border-bottom:none;}
 .history-delete-bg{
@@ -3676,7 +3676,7 @@ const PREFLIGHT_ITEMS=[
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
-let S={version:19,hrs:228,dust:false,avgas:false,ivo:false,sbCompleted:{},logged:{},otherLogged:{},acCustomTasks:{},unsvc:false,unsvcReason:'',jnpDate:null,createdAt:getTodayISO(),pilotMode:false,preflight:{},history:[],lightMode:false,aircraftModel:'mto-sport-2010',engineType:'914',rotorSystem:'RSII',engineTBO:'1500',profile:{reg:'',type:'',class:'',color:'',ownerName:'',ownerAddress:''}};
+let S={version:19,hrs:0,dust:false,avgas:false,ivo:false,sbCompleted:{},logged:{},otherLogged:{},acCustomTasks:{},unsvc:false,unsvcReason:'',jnpDate:null,createdAt:getTodayISO(),pilotMode:false,preflight:{},history:[],lightMode:false,aircraftModel:'mto-sport-2010',engineType:'914',rotorSystem:'RSII',engineTBO:'1500',profile:{reg:'',type:'',class:'',color:'',ownerName:'',ownerAddress:''}};
 try{
   const r=JSON.parse(localStorage.getItem('mto_v17')||localStorage.getItem('mto_v16')||localStorage.getItem('mto_v15')||localStorage.getItem('mto_v14')||localStorage.getItem('mto_v12')||'{}');
   if(r && (r.version || r.hrs != null)){
@@ -6011,7 +6011,7 @@ function renderHistoryList(){
             <div class="history-name"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${item.taskName}</span>${item.sample?'<span class="sample-badge">SAMPLE</span>':''}</div>
             <div class="hist-expand-wrap">
               <div>
-                <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)} · ${item.hours} hrs${item.notes ? ' · ' + item.notes : ''}</div>
+                <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)}${item.notes ? ' · ' + item.notes : ''}</div>
                 <div class="history-actions" style="justify-content:space-between;padding-right:24px;">
                   <div style="display:flex;align-items:center;gap:4px;">
                     <button class="hist-btn" onclick="openEditHistoryModal('${item.id}')">Edit</button>
@@ -6265,7 +6265,7 @@ function renderHistoryList(){
         header.style.background = 'var(--panel)';
         feed.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(s=>{
           if(childWrap.contains(s) || s === header) return;
-          s.style.transition='border-color .3s,background .3s,box-shadow .3s';
+          s.style.transition='border-color .3s,background .3s,box-shadow .3s,opacity .7s ease';
           s.style.opacity='0.08'; s.style.pointerEvents='none';
         });
       } else {
@@ -6280,7 +6280,7 @@ function renderHistoryList(){
         header.style.background = '';
         header.style.boxShadow = 'none';
         feed.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(s=>{
-          s.style.transition='border-color .3s,background .3s,box-shadow .3s';
+          s.style.transition='border-color .3s,background .3s,box-shadow .3s,opacity .7s ease';
           s.style.opacity=''; s.style.pointerEvents='';
         });
         if(hiddenItems.length > 0){
@@ -6329,7 +6329,7 @@ function renderHistoryList(){
           <div class="history-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes ? item.notes : item.taskName}${item.sample?'<span class="sample-badge">SAMPLE</span>':''}</div>
           <div class="hist-expand-wrap">
             <div>
-              <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)} · ${item.hours} hrs${item.notes ? ' · ' + item.notes : ''}</div>
+              <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)}${item.notes ? ' · ' + item.notes : ''}</div>
               <div class="history-actions" style="justify-content:space-between;padding-right:24px;">
                 <div style="display:flex;align-items:center;gap:4px;">
                   <button class="hist-btn" onclick="openEditHistoryModal('${item.id}')">Edit</button>
@@ -6526,7 +6526,7 @@ function renderHistoryList(){
           <div class="history-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes ? item.notes : item.taskName}${item.sample?'<span class="sample-badge">SAMPLE</span>':''}</div>
           <div class="hist-expand-wrap">
             <div>
-              <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)} · ${item.hours} hrs${item.notes ? ' · ' + item.notes : ''}</div>
+              <div class="history-detail"><span style="color:var(--gold);font-weight:600;">Logged</span> ${formatHistoryDateTime(item.dateTime || item.date)}${item.notes ? ' · ' + item.notes : ''}</div>
               <div class="history-actions" style="justify-content:space-between;padding-right:24px;">
                 <div style="display:flex;align-items:center;gap:4px;">
                   <button class="hist-btn" onclick="openEditHistoryModal('${item.id}')">Edit</button>
@@ -6665,6 +6665,7 @@ function renderHistoryList(){
             if(nameEl){nameEl.style.transform=''; nameEl.style.fontWeight=''; nameEl.style.webkitMaskImage='';nameEl.style.maskImage='';}
             if(nameEl){nameEl.style.transform=''; nameEl.style.fontWeight=''; nameEl.style.webkitMaskImage='';nameEl.style.maskImage='';}
             if(dotEl){dotEl.style.transform='';dotEl.style.boxShadow='';}
+            if(rightEl){rightEl.style.color='';}
             if(wrapEl){wrapEl.classList.remove('open');}
           } else {
             el.dataset.expanded='1';
@@ -6675,6 +6676,7 @@ function renderHistoryList(){
             if(nameEl){nameEl.style.transform=''; nameEl.style.fontWeight='800';nameEl.style.webkitMaskImage='none';nameEl.style.maskImage='none';}
             if(nameEl){nameEl.style.transform=''; nameEl.style.fontWeight='800';nameEl.style.webkitMaskImage='none';nameEl.style.maskImage='none';}
             if(dotEl){dotEl.style.transform='scale(1.5)';dotEl.style.boxShadow='0 0 12px rgba(232,168,56,.9)';}
+            if(rightEl){rightEl.style.color='var(--gold)';}
             if(wrapEl){wrapEl.classList.add('open');}
             setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);
           }
@@ -7106,13 +7108,15 @@ function jumpToHistoryEntry(taskId){
         // interactions: expanding an entry by hand fades the rest of the
         // feed to 0.08; the jump never did, so a jumped-to entry glowed
         // while everything else stayed full brightness. Same selectors
-        // and value as the manual paths. Skips the target's own feed
-        // block (its swipe wrap, or its group's container) and, for a
-        // grouped target, its group header — the same exemptions the
-        // group-open fade uses. Cleanup is already covered: collapse /
-        // outside-tap / group-close restores reset every wrap and
-        // header, and _gcCloseExpandedHistoryEntry() un-fades on tab
-        // exit as well.
+        // and value as the manual paths. REVISED [v1.1, Amir's Option 1]:
+        // only the target's own swipe wrap and, for a grouped target,
+        // its group header stay lit — group-mates fade with everything
+        // else, so a stray entry filed under the same taskId (his
+        // gimbal entry inside the teeter group) no longer rides along
+        // at full brightness. Manual browsing is untouched. Cleanup is
+        // already covered: collapse / outside-tap / group-close
+        // restores reset every wrap and header, and
+        // _gcCloseExpandedHistoryEntry() un-fades on tab exit as well.
         var feedEl = document.getElementById('historyFeed');
         if(feedEl){
           var grpTop = el;
@@ -7120,7 +7124,6 @@ function jumpToHistoryEntry(taskId){
           var grpHeader = (grpTop && !grpTop.classList.contains('history-swipe-wrap')) ? grpTop.previousElementSibling : null;
           feedEl.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(function(s){
             if(s === grpHeader) return;
-            if(grpTop && grpTop.contains(s)) return;
             if(s.contains(el)) return;
             s.style.opacity = '0.08';
             s.style.pointerEvents = 'none';
@@ -15082,7 +15085,7 @@ let LB = JSON.parse(localStorage.getItem('lb_data') || 'null') || [];
     document.head.appendChild(st);
   }
   window.clearSampleData = function(){
-    if(!confirm('Remove all sample data? Your own entries are never touched.')) return;
+    iosConfirm('🧹','Clear sample data?','Remove all sample data? Your own entries are never touched.','Clear data',function(){
     S.history = (S.history||[]).filter(function(e){ return !e.sample; });
     for(var i=LB.length-1;i>=0;i--){ if(LB[i].sample) LB.splice(i,1); }
     // Rebuild S.logged / S.otherLogged purely from remaining REAL history.
@@ -15120,6 +15123,7 @@ let LB = JSON.parse(localStorage.getItem('lb_data') || 'null') || [];
     try{ renderHistoryList(); }catch(e){}
     try{ lbRenderList(); }catch(e){}
     try{ renderDashLogbook(); }catch(e){}
+    });
   };
   if(_hasSampleData() && typeof document !== 'undefined'){
     _injectSampleCSS();
@@ -17816,50 +17820,5 @@ function showInstallDone(){
      flight-tracking start/stop countdown overlays) so this is never covered
      by anything, including the compass full-screen sheet (z-index 500). -->
 <div id="gcAccuracyGlow" style="position:fixed;inset:0;z-index:10000;pointer-events:none;background:transparent;transition:background 0.6s ease;"></div>
-<!-- GyroCare Pro web-demo time lock: 15 minutes, then prompt to download the app.
-     Expiry persists in localStorage so reloading does not reset it. -->
-<script>
-(function(){
-  var LIMIT_MS = 15 * 60 * 1000;
-  var K_START = 'gyrocare_demo_start';
-  var K_DONE  = 'gyrocare_demo_done';
-  var store = null;
-  try { store = window.localStorage; } catch(e){ store = null; }
-  function now(){ return Date.now(); }
-  function lock(){
-    try { if(store) store.setItem(K_DONE, '1'); } catch(e){}
-    if(document.getElementById('demo-lock')) return;
-    var d = document.createElement('div');
-    d.id = 'demo-lock';
-    d.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;');
-    d.innerHTML =
-      '<div style="position:fixed;inset:0;z-index:2147483647;background:rgba(4,6,12,0.97);' +
-      'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;">' +
-      '<div style="font-size:15px;font-weight:800;letter-spacing:3px;color:#FFC82E;margin-bottom:14px;">GYROCARE PRO</div>' +
-      '<div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:10px;">Your demo time is up</div>' +
-      '<div style="font-size:15px;color:#9aa3b5;max-width:300px;line-height:1.5;margin-bottom:26px;">' +
-      'You got the full tour. Now get the real thing and keep it in your hangar.</div>' +
-      '<a href="https://apps.apple.com/us/app/gyrocare-pro/id6804467486" ' +
-      'style="display:inline-block;background:linear-gradient(180deg,#FFD75E,#FFC82E);color:#1A1206;' +
-      'font-weight:800;font-size:17px;padding:15px 42px;border-radius:999px;text-decoration:none;">' +
-      'Download on the App Store</a>' +
-      '<div style="margin-top:22px;font-size:13px;color:#5b6478;">Built by a pilot, for pilots.</div>' +
-      '</div>';
-    document.body.appendChild(d);
-  }
-  var expired = false;
-  try { expired = !!(store && store.getItem(K_DONE)); } catch(e){}
-  if(expired){ lock(); return; }
-  var start = 0;
-  try { start = parseInt(store.getItem(K_START) || '0', 10) || 0; } catch(e){}
-  if(!start){
-    start = now();
-    try { if(store) store.setItem(K_START, String(start)); } catch(e){}
-  }
-  var remaining = LIMIT_MS - (now() - start);
-  if(remaining <= 0){ lock(); return; }
-  setTimeout(lock, remaining);
-})();
-</script>
 </body>
 </html>
