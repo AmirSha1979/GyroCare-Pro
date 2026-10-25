@@ -7116,22 +7116,25 @@ function jumpToHistoryEntry(taskId){
         // interactions: expanding an entry by hand fades the rest of the
         // feed to 0.08; the jump never did, so a jumped-to entry glowed
         // while everything else stayed full brightness. Same selectors
-        // and value as the manual paths. REVISED [v1.1, Amir's Option 1]:
-        // only the target's own swipe wrap and, for a grouped target,
-        // its group header stay lit — group-mates fade with everything
-        // else, so a stray entry filed under the same taskId (his
-        // gimbal entry inside the teeter group) no longer rides along
-        // at full brightness. Manual browsing is untouched. Cleanup is
-        // already covered: collapse / outside-tap / group-close
-        // restores reset every wrap and header, and
+        // and value as the manual paths. REVISED [v1.1, Amir, Oct 25 PM]:
+        // the jump now matches a manual expand EXACTLY — for a grouped
+        // target the whole group stays lit (header + every sub task in
+        // it, preview and hidden batch alike); only the OTHER groups
+        // dim. (An earlier same-day variant faded the group-mates too;
+        // Amir reversed it after seeing it live: sub tasks blacked out
+        // on landing read as hidden.) Manual browsing is untouched.
+        // Cleanup is already covered: collapse / outside-tap /
+        // group-close restores reset every wrap and header, and
         // _gcCloseExpandedHistoryEntry() un-fades on tab exit as well.
         var feedEl = document.getElementById('historyFeed');
         if(feedEl){
           var grpTop = el;
           while(grpTop && grpTop.parentElement !== feedEl) grpTop = grpTop.parentElement;
-          var grpHeader = (grpTop && !grpTop.classList.contains('history-swipe-wrap')) ? grpTop.previousElementSibling : null;
+          var isGrouped = grpTop && !grpTop.classList.contains('history-swipe-wrap');
+          var grpHeader = isGrouped ? grpTop.previousElementSibling : null;
           feedEl.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(function(s){
             if(s === grpHeader) return;
+            if(isGrouped && grpTop.contains(s)) return;
             if(s.contains(el)) return;
             s.style.opacity = '0.08';
             s.style.pointerEvents = 'none';
