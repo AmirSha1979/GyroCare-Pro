@@ -1486,7 +1486,7 @@ body.light-mode .profile-chip-label{color:#4a5568;}
 </script>
 </div>
   <div class="dash-title" style="font-size:18px;">GyroCare <span><span class="dash-title-cap">P</span>ro</span></div>
-  <div style="font-size:12px;color:#5e6880;margin-top:6px;">Ver 16 · Developed by Amir · GYRO GUY</div>
+  <div style="font-size:12px;color:#5e6880;margin-top:6px;">Ver 1.1 · Developed by Amir · GYRO GUY</div>
 </div>
 
 <!-- TOPBAR REMOVED — actions moved to dashboard hero -->
@@ -2327,7 +2327,7 @@ body.light-mode .profile-chip-label{color:#4a5568;}
     </div>
 
     <div style="padding:0 2px;font-size:11px;color:var(--gold);font-weight:700;line-height:1.7;margin-bottom:10px;">
-      Version 16<br>
+      Version 1.1<br>
       Developed by Amir · GYRO GUY
     </div>
 
@@ -7095,6 +7095,30 @@ function jumpToHistoryEntry(taskId){
         if(dotEl){ dotEl.style.transition='transform .3s cubic-bezier(0.34,1.1,0.64,1),box-shadow .3s ease'; dotEl.style.transform='scale(1.5)'; dotEl.style.boxShadow='0 0 12px rgba(232,168,56,.9)'; }
         if(wrapEl){ wrapEl.classList.add('open'); }
         var tagEl = el.querySelector('.history-name .tag'); if(tagEl) tagEl.style.display='none';
+        // ADDED [v1.1] — spotlight fade, parity with the manual History
+        // interactions: expanding an entry by hand fades the rest of the
+        // feed to 0.08; the jump never did, so a jumped-to entry glowed
+        // while everything else stayed full brightness. Same selectors
+        // and value as the manual paths. Skips the target's own feed
+        // block (its swipe wrap, or its group's container) and, for a
+        // grouped target, its group header — the same exemptions the
+        // group-open fade uses. Cleanup is already covered: collapse /
+        // outside-tap / group-close restores reset every wrap and
+        // header, and _gcCloseExpandedHistoryEntry() un-fades on tab
+        // exit as well.
+        var feedEl = document.getElementById('historyFeed');
+        if(feedEl){
+          var grpTop = el;
+          while(grpTop && grpTop.parentElement !== feedEl) grpTop = grpTop.parentElement;
+          var grpHeader = (grpTop && !grpTop.classList.contains('history-swipe-wrap')) ? grpTop.previousElementSibling : null;
+          feedEl.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(function(s){
+            if(s === grpHeader) return;
+            if(grpTop && grpTop.contains(s)) return;
+            if(s.contains(el)) return;
+            s.style.opacity = '0.08';
+            s.style.pointerEvents = 'none';
+          });
+        }
         // Clear inline transitions afterwards so nothing is left frozen
         // (same discipline as jumpToMntTask — avoids the stuck-transition bug).
         setTimeout(function(){
@@ -14454,6 +14478,16 @@ function _gcCloseExpandedHistoryEntry(){
     if(zRight){ zRight.style.color=''; }
     if(zDot){ zDot.style.transform=''; zDot.style.boxShadow=''; }
     if(zWrap){ zWrap.classList.remove('open'); }
+  });
+  // ADDED [v1.1] — lift the spotlight fade too. Expanding a history
+  // entry (by hand or via the MNT jump) fades the rest of the feed;
+  // collapsing the entry alone left the feed dimmed when the user
+  // exited via a tab switch, because the render cache then skips the
+  // rebuild on return. This function is the tab-exit cleanup, so the
+  // fade ends here. No-op when nothing is faded.
+  document.querySelectorAll('#historyFeed .history-swipe-wrap, #historyFeed [data-hist-header]').forEach(function(s){
+    s.style.opacity = '';
+    s.style.pointerEvents = '';
   });
 }
 function switchTab(tab){
