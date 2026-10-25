@@ -1188,8 +1188,8 @@ body.light-mode .hist-frosted-header{
 .lb-path-btn:active{background:rgba(232,168,56,.22);}
 .hist-btn:hover{border-color:var(--gold);color:var(--gold);}
 .history-empty{padding:20px;text-align:center;color:var(--muted);font-size:12px;}
-.history-swipe-wrap{position:relative;transition:opacity .7s ease;overflow:hidden;border-radius:12px;}
-[data-hist-header]{transition:opacity .7s ease;}
+.history-swipe-wrap{position:relative;transition:none;overflow:hidden;border-radius:12px;}
+[data-hist-header]{transition:none;}
 .hist-child-inner .history-swipe-wrap{border-radius:0;border-bottom:0.5px solid var(--line);}
 .hist-child-inner .history-swipe-wrap:last-child{border-bottom:none;}
 .history-delete-bg{
@@ -6208,7 +6208,7 @@ function renderHistoryList(){
 
     // ── Group header ─────────────────────────────────────────────
     const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px 12px 0 0;background:var(--panel2);border:1px solid var(--line);border-bottom:none;cursor:pointer;transition:border-color .3s,background .3s,box-shadow .3s,opacity .7s ease;';
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px 12px 0 0;background:var(--panel2);border:1px solid var(--line);border-bottom:none;cursor:pointer;transition:border-color .3s,background .3s,box-shadow .3s;';
     const grpLabel = (groupKey === 'other') ? 'Misc' : (first.taskName||'Unknown');
     header.innerHTML =
       '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">' +
@@ -6259,7 +6259,7 @@ function renderHistoryList(){
         const fullH = childWrap.scrollHeight;
         childWrap.style.maxHeight = '0';
         childWrap.getBoundingClientRect();
-        childWrap.style.transition = 'max-height .45s cubic-bezier(0.32,0.72,0,1), opacity .7s ease';
+        childWrap.style.transition = 'max-height .45s cubic-bezier(0.32,0.72,0,1)';
         childWrap.style.maxHeight = fullH + 'px';
         childWrap.style.opacity = '1';
         setTimeout(()=>{
@@ -6271,14 +6271,14 @@ function renderHistoryList(){
         header.style.background = 'var(--panel)';
         feed.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(s=>{
           if(childWrap.contains(s) || s === header) return;
-          s.style.transition='border-color .3s,background .3s,box-shadow .3s,opacity .7s ease';
+          s.style.transition='border-color .3s,background .3s,box-shadow .3s';
           s.style.opacity='0.08'; s.style.pointerEvents='none';
         });
       } else {
         const curH = childWrap.scrollHeight;
         childWrap.style.maxHeight = curH + 'px';
         childWrap.getBoundingClientRect();
-        childWrap.style.transition = 'max-height .38s cubic-bezier(0.32,0.72,0,1), opacity .7s ease';
+        childWrap.style.transition = 'max-height .38s cubic-bezier(0.32,0.72,0,1)';
         childWrap.style.maxHeight = '0';
         childWrap.style.opacity = '0';
         if(arrow) arrow.textContent = '▼';
@@ -6286,7 +6286,7 @@ function renderHistoryList(){
         header.style.background = '';
         header.style.boxShadow = 'none';
         feed.querySelectorAll('.history-swipe-wrap, [data-hist-header]').forEach(s=>{
-          s.style.transition='border-color .3s,background .3s,box-shadow .3s,opacity .7s ease';
+          s.style.transition='border-color .3s,background .3s,box-shadow .3s';
           s.style.opacity=''; s.style.pointerEvents='';
         });
         if(hiddenItems.length > 0){
@@ -6511,7 +6511,7 @@ function renderHistoryList(){
     const hiddenWrap = document.createElement('div');
     const hiddenInner = document.createElement('div');
     hiddenInner.style.cssText = 'min-height:0;display:flex;flex-direction:column;overflow:hidden;';
-    hiddenWrap.style.cssText = 'display:grid;grid-template-rows:0fr;overflow:hidden;opacity:0;transition:grid-template-rows .45s cubic-bezier(0.32,0.72,0,1),opacity .7s ease;will-change:grid-template-rows,opacity;';
+    hiddenWrap.style.cssText = 'display:grid;grid-template-rows:0fr;overflow:hidden;opacity:0;transition:grid-template-rows .45s cubic-bezier(0.32,0.72,0,1);will-change:grid-template-rows,opacity;';
     function _renderHiddenBatch(){
     if(hiddenRendered) return;
     hiddenRendered = true;
@@ -6725,7 +6725,7 @@ function renderHistoryList(){
           _histLastSnapshot = null; // CACHE INVALIDATION [session 22] — see note above
           showMore.style.display = 'none';
           hiddenWrap.style.maxHeight = 'none';
-          hiddenWrap.style.transition = 'grid-template-rows .45s cubic-bezier(0.32,0.72,0,1),opacity .7s ease';
+          hiddenWrap.style.transition = 'grid-template-rows .45s cubic-bezier(0.32,0.72,0,1)';
           hiddenWrap.getBoundingClientRect();
           hiddenWrap.style.gridTemplateRows = '1fr';
           hiddenWrap.style.opacity = '1';
