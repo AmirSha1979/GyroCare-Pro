@@ -2419,12 +2419,16 @@ body.light-mode .profile-chip-label{color:#4a5568;}
     <div class="wf-coords" id="wfCoords" style="display:flex;align-items:center;gap:5px;">
       <span id="wfGpsDot" style="width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block;flex-shrink:0;transition:background .4s;"></span>
       <span id="wfCoordsText">Locating<span class="ldots"></span></span>
-      <span id="wfSrcTag" style="display:none;font-size:9px;font-weight:800;letter-spacing:.08em;color:#000;background:var(--gold);border-radius:6px;padding:2px 6px;flex-shrink:0;">GPS</span>
       <span id="wfAccNote" style="display:none;font-size:9px;font-weight:700;letter-spacing:.06em;color:#FFA500;flex-shrink:0;">&#9888; COMPASS UNRELIABLE</span>
     </div>
     <div id="wfManualTag" onclick="wfResetToGps()" style="display:none;margin-top:6px;font-size:11px;color:#000;font-weight:800;letter-spacing:.06em;background:var(--gold);border-radius:8px;padding:4px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent;">↺ USE MY GPS</div>
   </div>
   <div class="wf-compass">
+    <!-- [compass badge] GPS source badge (Amir pick A1-green, Oct 25):
+         frosted rim badge shown while GPS course drives the rose;
+         replaces the old coords-row pill. Toggled on state changes
+         only, by the same gate in the RAF loop below. -->
+    <div id="wfGpsBadge" style="display:none;position:absolute;top:3.5%;right:3.5%;width:40px;height:40px;border-radius:50%;background:rgba(16,26,20,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(74,222,128,.5);box-shadow:0 0 9px rgba(74,222,128,.28);align-items:center;justify-content:center;z-index:5;pointer-events:none;"><svg viewBox="0 0 48 48" width="23" height="23" aria-hidden="true"><g transform="rotate(45 24 24)"><g fill="#4ADE80"><rect x="19" y="19" width="10" height="10" rx="2"/><rect x="2.5" y="20.5" width="12" height="7" rx="1.2"/><rect x="33.5" y="20.5" width="12" height="7" rx="1.2"/></g><g stroke="rgba(10,20,14,.85)" stroke-width="1.3"><path d="M6.5 20.5v7M10.5 20.5v7M37.5 20.5v7M41.5 20.5v7"/><path d="M14.5 24h4.5M29 24h4.5"/></g></g></svg></div>
     <!-- Ring: rotates with device heading -->
     <svg id="wfRing" viewBox="0 0 360 360" style="transform-origin:center;"></svg>
     <!-- Needle: fixed to wind direction -->
@@ -13547,13 +13551,13 @@ function _attachWFCompass(){
     _wfHdg = _smoothHdg;
     // [compass assist] Source indicators — written ONLY when the state
     // changes, never per frame (renderer-weight discipline, sessions
-    // 21-30). GPS tag while GPS drives; unreliable note while the
+    // 21-30). GPS badge while GPS drives; unreliable note while the
     // compass is untrusted and GPS cannot take over.
     var _tagState = (_srcMode==='gps') ? 'gps' : ((_accState==='bad') ? 'bad' : 'ok');
     if(_tagState!==_tagShown){
       _tagShown = _tagState;
-      var _tagEl = document.getElementById('wfSrcTag');
-      if(_tagEl) _tagEl.style.display = (_tagState==='gps') ? '' : 'none';
+      var _tagEl = document.getElementById('wfGpsBadge');
+      if(_tagEl) _tagEl.style.display = (_tagState==='gps') ? 'flex' : 'none';
       var _accEl = document.getElementById('wfAccNote');
       if(_accEl) _accEl.style.display = (_tagState==='bad') ? '' : 'none';
     }
