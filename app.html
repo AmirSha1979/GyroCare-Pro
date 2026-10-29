@@ -13250,13 +13250,17 @@ function startWFGps(){
       // pattern for cross-closure state (cf. _wfWobbleOffset). Inside
       // the manual-mode gate on purpose: in a pinned-city planning view
       // a course from the pilot's real position must never drive the
-      // compass. Invalid/absent course (e.g. stationary) clears state.
+      // compass. Invalid/absent course on a single fix (routine on iOS:
+      // momentary course loss, near-standstill) does NOT clear state —
+      // the last good course/speed stand and simply age out through the
+      // GPS_FRESH_MS check in _attachWFCompass, so one bad fix can no
+      // longer kick GPS drive off and the next good one snap it back
+      // (the car-test flapping Amir hit on 2026-10-28).
       var _crs = pos.coords.heading, _spd = pos.coords.speed;
       if(typeof _crs==='number' && _crs>=0 && typeof _spd==='number' && _spd>=0){
         window._gcGpsCourse=_crs; window._gcGpsSpeed=_spd; window._gcGpsTs=Date.now();
-      } else {
-        window._gcGpsCourse=null; window._gcGpsSpeed=null; window._gcGpsTs=0;
       }
+      // else: invalid fix — publish nothing, clear nothing (see above).
     }
     _setGpsDot(_wfManualMode ? 'manual' : 'locked');
     if(!firstFixDone){
@@ -13444,8 +13448,9 @@ function _attachWFCompass(){
   var GPS_OFF_MPS = 2.57;   // ~5 kt — releases below it (hysteresis)
   var STALL_MS = 1500;      // sensor-event gap that counts as a stall
   var GPS_FRESH_MS = 3000;  // ignore GPS fixes older than this
+  var DWELL_MS = 5000;      // min time between heading-source switches
   var _accState = 'ok', _accBadSince = 0, _accGoodSince = 0;
-  var _srcMode = 'mag', _gpsTarget = null;
+  var _srcMode = 'mag', _gpsTarget = null, _srcSince = 0;
   var _lastEvtTs = 0, _lastFrameTs = 0, _tagShown = null;
   _wfHdgWatcher = function(e){
     _gcNoteCompassAcc(e); // [session 28] read-only sampling; no-ops when Diagnostics is off
@@ -13499,15 +13504,24 @@ function _attachWFCompass(){
     // course from where the pilot actually sits would be nonsense
     // there). Hysteresis: engage above GPS_ON_MPS, release below
     // GPS_OFF_MPS, so the source never flaps at the boundary.
+    var _nowMs = Date.now();
     var _gpsFresh = (typeof window._gcGpsCourse==='number') && (window._gcGpsCourse>=0)
       && (typeof window._gcGpsSpeed==='number')
-      && ((Date.now() - (window._gcGpsTs||0)) < GPS_FRESH_MS)
+      && ((_nowMs - (window._gcGpsTs||0)) < GPS_FRESH_MS)
       && !window._wfManualMode;
     var _wantGps = (_accState==='bad') && _gpsFresh
       && ((_srcMode==='gps') ? (window._gcGpsSpeed > GPS_OFF_MPS) : (window._gcGpsSpeed > GPS_ON_MPS));
     var _newMode = _wantGps ? 'gps' : 'mag';
-    if(_newMode!==_srcMode){
+    // [compass assist fix, 2026-10-28] Minimum dwell: a source switch
+    // is only honoured once the current source has driven for at least
+    // DWELL_MS. Stop-and-go speed and marginal interference otherwise
+    // toggle the source (snap + badge flicker) several times a minute.
+    // The want is re-evaluated every frame, so a switch that is still
+    // wanted when the dwell expires happens then — nothing is lost,
+    // only deferred.
+    if(_newMode!==_srcMode && (_nowMs - _srcSince) >= DWELL_MS){
       _srcMode = _newMode;
+      _srcSince = _nowMs;
       _resetRequested = true; // snap to the new source — no slow crawl across
     }
     var _target = _rawHdg;
