@@ -2393,8 +2393,14 @@ body.light-mode .profile-chip-label{color:#4a5568;}
        row ~12px) to land just below the coords row per the user's marked
        screenshot — .wf-loc is normal flow, not fixed, so this needs a
        quick on-device check and likely a small nudge, not a guarantee. -->
-  <button class="wf-reset-btn" onclick="resetWFHeading()" title="Reset heading" aria-label="Reset heading" style="position:absolute;top:calc(66px + env(safe-area-inset-top,0px));left:22px;width:40px;height:40px;background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .15s ease;">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/></svg>
+  <!-- [compass modes, 2026-10-31] Heading-source mode pill — replaces the
+       old reset button at the same top-left anchor. Tap: AUTO <-> GPS.
+       Long-press (>=550ms): the old reset's job (display snap), unchanged.
+       AUTO (white) = magnetometer primary + accuracy assist + the new
+       wind-compensated GPS cross-check. GPS (green) = locked to GPS
+       course, no checks, no switching. Rendering: wfRenderModeBtn(). -->
+  <button id="wfModeBtn" onpointerdown="wfModePressStart(event)" onpointerup="wfModePressEnd(event)" onpointerleave="wfModePressCancel()" onpointercancel="wfModePressCancel()" oncontextmenu="return false" title="Heading source: AUTO / GPS — long-press resets heading" aria-label="Heading source mode" style="position:absolute;top:calc(66px + env(safe-area-inset-top,0px));left:22px;height:40px;padding:0 16px;border-radius:20px;background:rgba(16,26,20,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:14px;font-weight:800;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;gap:7px;transition:transform .15s ease;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;-webkit-user-select:none;">
+    <span id="wfModeDot" style="width:8px;height:8px;border-radius:50%;background:#e8eef4;flex-shrink:0;"></span><span id="wfModeLbl">AUTO</span>
   </button>
   <!-- 5-day forecast button -->
   <div id="wfNoHardwareMsg" style="display:none;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 16px;margin-bottom:12px;text-align:center;font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.03em;">
@@ -13451,11 +13457,48 @@ function _attachWFCompass(){
   var DWELL_MS = 5000;      // min time between heading-source switches
   var _accState = 'ok', _accBadSince = 0, _accGoodSince = 0;
   var _srcMode = 'mag', _gpsTarget = null, _srcSince = 0;
+  // [compass modes + cross-check, 2026-10-31] Source MODE, chosen on the
+  // top-left pill: 'auto' (magnetometer primary; accuracy assist OR the
+  // wind-compensated GPS cross-check may substitute GPS) or 'gps'
+  // (locked to GPS course — no checks, no switching). Resets to 'auto'
+  // on every attach, like the rest of the assist state.
+  // The cross-check exists because of the 2026-10-31 flight: a constant
+  // ~20+ deg compass offset all flight while webkitCompassAccuracy never
+  // reported bad — the accuracy gate alone can NEVER catch a quiet,
+  // steady lie. The check compares the compass against the heading the
+  // GPS ground track IMPLIES once the wind's push is removed (wind
+  // triangle: air velocity = ground velocity - wind velocity; its
+  // direction is the heading the nose must have). Wind: _wfData (mph,
+  // deg FROM, 10 m Open-Meteo, refetched ~30 s), stamped _wfData.ts on
+  // every successful fetch. No variation correction: TX is ~1 deg and
+  // the 15 deg trip line absorbs a few degrees anywhere. NOT
+  // calibration (h section 1.4) — the magnetometer is never adjusted;
+  // the display routes around a reading the evidence condemns.
+  var XC_TRIP_DEG = 15;      // disagreement that condemns (fresh wind)
+  var XC_TRIP_STALE_DEG = 22; // widened line when the wind is aging
+  var XC_TRIP_MS = 20000;    // disagreement must hold this long to trip
+  var XC_CLEAR_DEG = 8;      // agreement line to hand back
+  var XC_CLEAR_MS = 5000;    // agreement must hold this long
+  var XC_MIN_MPS = 10.29;    // ~20 kt — check only at real flying speed
+  var XC_TURN_DPS = 3;       // GPS track swinging faster = turning; check sleeps
+  var WIND_FULL_MS = 600000;   // wind <10 min old: full sensitivity
+  var WIND_USE_MS = 1800000;   // wind <30 min old: widened line; older: check rests
+  var TAS_MIN_MPS = 7.7;     // implied-airspeed sanity band (~15-120 kt):
+  var TAS_MAX_MPS = 61.7;    // outside it the wind or the fix is junk this frame
+  var _userMode = 'auto', _xcState = 'ok';
+  var _xcBadMs = 0, _xcGoodMs = 0; // EVALUATED milliseconds above/below the lines
+  var _xcFrozenSince = 0, _xcLastEvalMs = 0; // evidence-freeze bookkeeping
+  var _xcSin = 0, _xcCos = 0; // EMA of the difference vector (starts empty)
+  var _xcLastCrs = null, _xcLastCrsTs = 0, _xcTurning = false;
+  var _lastMagRaw = null; // latest raw magnetic heading (0-360), either source driving
+  window._wfUserMode = 'auto';
+  if(typeof wfRenderModeBtn === 'function') wfRenderModeBtn();
   var _lastEvtTs = 0, _lastFrameTs = 0, _tagShown = null;
   _wfHdgWatcher = function(e){
     _gcNoteCompassAcc(e); // [session 28] read-only sampling; no-ops when Diagnostics is off
     var raw = e.webkitCompassHeading ?? ((e.alpha!=null)?(360-e.alpha)%360:null);
     if(raw==null) return;
+    _lastMagRaw = ((raw%360)+360)%360; // [cross-check] raw mag heading, unpolluted by source switching
     // Real heading received — cancel no-hardware timer
     if(window._wfHwTimer){ clearTimeout(window._wfHwTimer); window._wfHwTimer=null; }
     // [compass assist] Accuracy bookkeeping + stall detection — pure
@@ -13509,8 +13552,83 @@ function _attachWFCompass(){
       && (typeof window._gcGpsSpeed==='number')
       && ((_nowMs - (window._gcGpsTs||0)) < GPS_FRESH_MS)
       && !window._wfManualMode;
-    var _wantGps = (_accState==='bad') && _gpsFresh
-      && ((_srcMode==='gps') ? (window._gcGpsSpeed > GPS_OFF_MPS) : (window._gcGpsSpeed > GPS_ON_MPS));
+    // [cross-check] AUTO mode only. The difference is averaged as a
+    // vector EMA (~4 s time constant) that starts EMPTY — it takes
+    // ~3 s of consistent samples before the average is even readable
+    // (magnitude > 0.5), so one wild fix can never prime an accusation.
+    // The trip/clear timers accumulate EVALUATED time only (frames
+    // where every gate passed and a sample was actually processed);
+    // frozen frames hold them, and >5 s frozen expires them — a lie
+    // must be continuously evidenced, never summed from fragments.
+    // Gates: fresh fix, flying speed, not turning, plausible implied
+    // airspeed, wind not too old.
+    var _xcOuter = (_userMode==='auto') && _gpsFresh && (window._gcGpsSpeed > XC_MIN_MPS)
+       && (_lastMagRaw!==null) && _wfData && (typeof _wfData.dir==='number');
+    var _xcRan = false;
+    if(_xcOuter){
+      var _windAge = _nowMs - (_wfData.ts||0);
+      var _xcTripLine = (_windAge < WIND_FULL_MS) ? XC_TRIP_DEG
+        : ((_windAge < WIND_USE_MS) ? XC_TRIP_STALE_DEG : Infinity);
+      if(_xcTripLine!==Infinity){
+        if(_xcLastCrsTs && (_nowMs - _xcLastCrsTs) >= 800){
+          var _crsD = window._gcGpsCourse - _xcLastCrs;
+          if(_crsD>180) _crsD-=360; if(_crsD<-180) _crsD+=360;
+          _xcTurning = (Math.abs(_crsD)/((_nowMs - _xcLastCrsTs)/1000)) > XC_TURN_DPS;
+          _xcLastCrs = window._gcGpsCourse; _xcLastCrsTs = _nowMs;
+        } else if(!_xcLastCrsTs){ _xcLastCrs = window._gcGpsCourse; _xcLastCrsTs = _nowMs; }
+        if(!_xcTurning){
+          var _wMs = (_wfData.speed||0) * 0.44704; // mph -> m/s
+          var _wRad = (_wfData.dir||0) * Math.PI/180;
+          var _gRad = window._gcGpsCourse * Math.PI/180;
+          // vectors in (east, north); wind velocity points where the air moves TO
+          var _gE = window._gcGpsSpeed * Math.sin(_gRad), _gN = window._gcGpsSpeed * Math.cos(_gRad);
+          var _wE = -_wMs * Math.sin(_wRad), _wN = -_wMs * Math.cos(_wRad);
+          var _aE = _gE - _wE, _aN = _gN - _wN;
+          var _tas = Math.sqrt(_aE*_aE + _aN*_aN);
+          if(_tas > TAS_MIN_MPS && _tas < TAS_MAX_MPS){
+            var _implied = Math.atan2(_aE, _aN) * 180/Math.PI;
+            if(_implied < 0) _implied += 360;
+            var _dRad = (_lastMagRaw - _implied) * Math.PI/180;
+            var _k = 1 - Math.exp(-_dt/4000);
+            _xcSin += _k*(Math.sin(_dRad) - _xcSin); _xcCos += _k*(Math.cos(_dRad) - _xcCos);
+            if(Math.sqrt(_xcSin*_xcSin + _xcCos*_xcCos) > 0.5){
+              _xcRan = true;
+              var _xcDt = _xcLastEvalMs ? Math.min(_nowMs - _xcLastEvalMs, 250) : 0;
+              var _xcDiff = Math.abs(Math.atan2(_xcSin, _xcCos) * 180/Math.PI);
+              if(_xcState==='ok'){
+                if(_xcDiff > _xcTripLine){ _xcBadMs += _xcDt; _xcGoodMs = 0; if(_xcBadMs >= XC_TRIP_MS){ _xcState='bad'; _xcBadMs = 0; } }
+                else _xcBadMs = 0;
+              } else {
+                if(_xcDiff < XC_CLEAR_DEG){ _xcGoodMs += _xcDt; if(_xcGoodMs >= XC_CLEAR_MS){ _xcState='ok'; _xcGoodMs = 0; } }
+                else _xcGoodMs = 0;
+              }
+            }
+          }
+        }
+      }
+    } else {
+      _xcLastCrsTs = 0; // sampler re-primes cleanly when the gates reopen
+    }
+    if(_xcRan){ _xcFrozenSince = 0; _xcLastEvalMs = _nowMs; }
+    else {
+      if(!_xcFrozenSince) _xcFrozenSince = _nowMs;
+      else if((_nowMs - _xcFrozenSince) > 5000){ _xcBadMs = 0; _xcGoodMs = 0; }
+    }
+    var _wantGps;
+    if(_userMode==='gps'){
+      // [compass modes] GPS locked: drive from GPS whenever a usable
+      // course exists — a fresh fix, or a recent one while slow (the
+      // publisher keeps the last good course standing, so standing
+      // still holds the last course rather than freezing the needle or
+      // silently falling back). No checks run in this mode. Only a
+      // total GPS loss (>10 s without a fix) lets the magnetometer
+      // drive, and GPS resumes the moment a fix returns.
+      _wantGps = (typeof window._gcGpsCourse==='number') && (window._gcGpsCourse>=0)
+        && ((_nowMs - (window._gcGpsTs||0)) < 10000) && !window._wfManualMode;
+    } else {
+      _wantGps = ((_accState==='bad') || (_xcState==='bad')) && _gpsFresh
+        && ((_srcMode==='gps') ? (window._gcGpsSpeed > GPS_OFF_MPS) : (window._gcGpsSpeed > GPS_ON_MPS));
+    }
     var _newMode = _wantGps ? 'gps' : 'mag';
     // [compass assist fix, 2026-10-28] Minimum dwell: a source switch
     // is only honoured once the current source has driven for at least
@@ -13577,7 +13695,7 @@ function _attachWFCompass(){
     // changes, never per frame (renderer-weight discipline, sessions
     // 21-30). GPS badge while GPS drives; unreliable note while the
     // compass is untrusted and GPS cannot take over.
-    var _tagState = (_srcMode==='gps') ? 'gps' : ((_accState==='bad') ? 'bad' : 'ok');
+    var _tagState = (_srcMode==='gps') ? 'gps' : (((_accState==='bad') || (_xcState==='bad')) ? 'bad' : 'ok');
     if(_tagState!==_tagShown){
       _tagShown = _tagState;
       var _tagEl = document.getElementById('wfGpsBadge');
@@ -13600,6 +13718,16 @@ function _attachWFCompass(){
   // directly, since _resetRequested/_rawHdg/_smoothHdg aren't reachable from
   // outside this function any other way.
   _wfHdgWatcher._requestReset = function(){ _resetRequested = true; };
+  // [compass modes] Same exposure pattern: the pill's handler sets the
+  // mode through here. A manual GPS pick zeroes the dwell clock so the
+  // pilot's tap acts on the next frame — his authority is not queued
+  // behind the anti-flap timer that guards the automatic switches.
+  _wfHdgWatcher._setUserMode = function(m){
+    _userMode = (m==='gps') ? 'gps' : 'auto';
+    if(_userMode==='gps') _srcSince = 0;
+  };
+  // [test hook] Read-only state snapshot for the node harness.
+  _wfHdgWatcher._xcDebug = function(){ return { userMode:_userMode, srcMode:_srcMode, xcState:_xcState, accState:_accState }; };
 }
 
 function stopWFCompass(){
@@ -13608,6 +13736,52 @@ function stopWFCompass(){
     window.removeEventListener('deviceorientation', _wfHdgWatcher, true);
     _wfHdgWatcher=null;
   }
+}
+
+// [compass modes, 2026-10-31] Mode pill handlers. The pill is the single
+// visible authority on heading source: white AUTO / green GPS, matching
+// the mockups Amir approved (redesign-mockup/compass-mode-button-mockup).
+// Tap toggles the mode; a >=550ms press is the old reset button's job
+// (resetWFHeading, below) — the reset did not die, it moved to the
+// long-press so the tap could carry the mode. Mode truth lives in
+// window._wfUserMode; _attachWFCompass resets it to 'auto' on every
+// attach and mirrors it into its closure via _setUserMode.
+function wfRenderModeBtn(){
+  var gps = (window._wfUserMode === 'gps');
+  var btn = document.getElementById('wfModeBtn');
+  var lbl = document.getElementById('wfModeLbl');
+  var dot = document.getElementById('wfModeDot');
+  if(lbl) lbl.textContent = gps ? 'GPS' : 'AUTO';
+  if(dot) dot.style.background = gps ? '#4ADE80' : '#e8eef4';
+  if(btn){
+    btn.style.borderColor = gps ? 'rgba(74,222,128,.65)' : 'rgba(255,255,255,.35)';
+    btn.style.color = gps ? '#4ADE80' : '#fff';
+    btn.style.boxShadow = gps ? '0 0 9px rgba(74,222,128,.25)' : 'none';
+  }
+}
+function wfSetUserMode(m){
+  window._wfUserMode = (m === 'gps') ? 'gps' : 'auto';
+  try{ if(_wfHdgWatcher && _wfHdgWatcher._setUserMode) _wfHdgWatcher._setUserMode(window._wfUserMode); }catch(e){}
+  wfRenderModeBtn();
+}
+var _wfModePressTs = 0, _wfModeLongTimer = null, _wfModeLongFired = false;
+function wfModePressStart(e){
+  _wfModeLongFired = false;
+  _wfModePressTs = Date.now();
+  if(_wfModeLongTimer) clearTimeout(_wfModeLongTimer);
+  _wfModeLongTimer = setTimeout(function(){ _wfModeLongFired = true; resetWFHeading(); }, 550);
+}
+function wfModePressEnd(e){
+  if(_wfModeLongTimer){ clearTimeout(_wfModeLongTimer); _wfModeLongTimer = null; }
+  if(_wfModeLongFired) return; // the press was a reset, not a toggle
+  if(_wfModePressTs && (Date.now() - _wfModePressTs) < 550){
+    wfSetUserMode(window._wfUserMode === 'gps' ? 'auto' : 'gps');
+  }
+  _wfModePressTs = 0;
+}
+function wfModePressCancel(){
+  if(_wfModeLongTimer){ clearTimeout(_wfModeLongTimer); _wfModeLongTimer = null; }
+  _wfModePressTs = 0;
 }
 
 // [session 32] Manual heading reset — see the button's own HTML comment for
@@ -13622,7 +13796,7 @@ function resetWFHeading(){
     if(_wfHdgWatcher && _wfHdgWatcher._requestReset) _wfHdgWatcher._requestReset();
   }catch(e){}
   try{
-    var btn = document.querySelector('.wf-reset-btn');
+    var btn = document.querySelector('#wfModeBtn, .wf-reset-btn');
     if(btn){
       btn.style.transform = 'scale(0.85)';
       setTimeout(function(){ btn.style.transform = ''; }, 150);
@@ -14426,7 +14600,7 @@ function _doWindFetch(lat, lon, lbl){
         var da=Math.round(pressAlt+(120*(tempC-((15-(pressAlt/1000)*1.98)))));
         var dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
         var dirLabel=dirs[Math.round(wDir/22.5)%16]||'N';
-        _wfData.speed=wSpeed; _wfData.gusts=wGusts; _wfData.dir=wDir;
+        _wfData.speed=wSpeed; _wfData.gusts=wGusts; _wfData.dir=wDir; _wfData.ts=Date.now(); // [compass cross-check] fetch time — the check ages the wind by this
         _wfData.tempF=Math.round(tempF); _wfData.pressHpa=Math.round(pressHpa); _wfData.da=da;
         // Update new DA arc gauge and wind trail
         updateDACard(da, tempF, pressHpa);
